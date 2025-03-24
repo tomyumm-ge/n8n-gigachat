@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-base.GigaChat",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Utility"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://developers.sber.ru/docs/ru/gigachat/individuals-quickstart"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://developers.sber.ru/portal/products/gigachat-api"
+			}
+		]
+	}
+}

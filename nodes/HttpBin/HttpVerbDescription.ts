@@ -24,6 +24,7 @@ export const httpVerbOperations: INodeProperties[] = [
 						url: '/get',
 					},
 				},
+				action: 'Get a http verb',
 			},
 			{
 				name: 'DELETE',
@@ -35,6 +36,7 @@ export const httpVerbOperations: INodeProperties[] = [
 						url: '/delete',
 					},
 				},
+				action: 'Delete a http verb',
 			},
 		],
 		default: 'get',

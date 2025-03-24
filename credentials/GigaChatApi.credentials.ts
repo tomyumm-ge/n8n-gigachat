@@ -17,7 +17,7 @@ export class GigaChatApi implements ICredentialType {
 			default: '',
 			typeOptions: {
 				password: true,
-			}
+			},
 		},
 		{
 			displayName: 'Domain',

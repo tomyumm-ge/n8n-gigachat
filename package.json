@@ -1,19 +1,26 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-gigachat",
   "version": "0.1.0",
-  "description": "",
+  "description": "A user-friendly GigaChat AI (Sber) nodes for n8n",
   "keywords": [
-    "n8n-community-node-package"
+    "gigachat",
+    "sber",
+    "n8n-community-node-package",
+    "n8n-nodes-gigachat",
+    "n8n-nodes",
+    "n8n",
+    "n8n.io",
+    "n8n.io-nodes"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/tomyumm-ge/n8n-gigachat",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "tomyumm-ge",
+    "email": "i@msmyk.ru"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/tomyumm-ge/n8n-gigachat.git"
   },
   "engines": {
     "node": ">=18.10",
