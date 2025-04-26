@@ -2,8 +2,23 @@
 
 # n8n-gigachat
 
-## ***This repo contains Gigachat API integration into n8n nodes. I am not Sber developer, just enthusiast doing nodes. For any Gigachat assistance, ![Gigachat docs](https://developers.sber.ru/dev) here. If you faced with bugs using nodes or you have any feedback - you can post an issue.***
+**_Этот репозиторий содержит интеграцию Gigachat API в n8n ноды. Я не разработчик Сбер, просто энтузиаст, который сделал ноду для удобства. Для получения любой помощи по Gigachat, обратитесь к ![официальной документации](https://developers.sber.ru/dev). Если вы столкнулись с проблемами/багами при использовании ноды - пишите issue, разберёмся._**
 
-## License
+## Поддержка AI нод
+
+Модель GigaChat можно добавить в:
+
+- Basic LLM Chain
+- Information Extractor
+- Question and Answer Chain
+- Sentiment Analysis
+- Summarization Chain
+- Text Classifier
+
+В данный момент не поддерживается:
+
+- AI Agent
+
+## Лицензия
 
 [MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
