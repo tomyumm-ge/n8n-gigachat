@@ -1,4 +1,10 @@
-import { IAuthenticateGeneric, Icon, ICredentialType, INodeProperties } from 'n8n-workflow';
+import {
+	IAuthenticateGeneric,
+	Icon,
+	ICredentialTestRequest,
+	ICredentialType,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class GigaChatApi implements ICredentialType {
 	name = 'gigaChatApi';
@@ -55,12 +61,21 @@ export class GigaChatApi implements ICredentialType {
 		},
 	};
 
-	// test: ICredentialTestRequest = {
-	// 	request: {
-	// 		baseURL: 'https://ngw.devices.sberbank.ru:9443',
-	// 		url: '/api/v2/oauth',
-	// 		method: 'POST',
-
-	// 	},
-	// };
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: 'https://ngw.devices.sberbank.ru:9443',
+			url: '/api/v2/oauth',
+			method: 'POST',
+			headers: {
+				RqUID:
+					'={{"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => (c == "x" ? (Math.random() * 16 | 0) : (Math.random() * 4 | 8)).toString(16))}}',
+				Authorization: '={{"Basic " + $credentials.authorizationKey}}',
+				'Content-Type': 'application/x-www-form-urlencoded',
+				Accept: 'application/json',
+			},
+			body: {
+				scope: '={{$credentials.scope}}',
+			},
+		},
+	};
 }
