@@ -76,6 +76,7 @@ export class GigaChatApi implements ICredentialType {
 			body: {
 				scope: '={{$credentials.scope}}',
 			},
+			skipSslCertificateValidation: true,
 		},
 	};
 }
