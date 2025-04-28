@@ -43,7 +43,7 @@
 			"dist/credentials/GigaChatApi.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/llms/LmGigaChat.node.js"
+			"dist/nodes/llms/LmGigaChat/LmGigaChat.node.js"
 		]
 	},
 	"devDependencies": {
