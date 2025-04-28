@@ -1,4 +1,3 @@
-import { Agent } from 'https';
 import {
 	ILoadOptionsFunctions,
 	INodePropertyOptions,
@@ -8,8 +7,8 @@ import {
 	NodeConnectionType,
 	SupplyData,
 } from 'n8n-workflow';
-import { GigaChat } from 'langchain-gigachat';
-import { GigaChat as GigaChatClient } from 'gigachat';
+import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
+import { GigaChatLcClient } from '../../shared/GigaChatLcClient';
 
 export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -146,23 +145,14 @@ export class LmGigaChat implements INodeType {
 
 		const modelName = this.getNodeParameter('model', itemIndex) as string;
 
-		const httpsAgent = new Agent({
-			/**
-			 * Do not reject self-signed certificate of
-			 * Ministry of Digital Development, Communications and Mass Media
-			 */
-			rejectUnauthorized: false,
-		});
-
-		const model = new GigaChat({
+		await GigaChatLcClient.updateConfig({
 			credentials: credentials.authorizationKey,
 			model: modelName,
-			httpsAgent,
 			scope: credentials.scope,
 		});
 
 		return {
-			response: model,
+			response: GigaChatLcClient,
 		};
 	}
 
@@ -173,20 +163,11 @@ export class LmGigaChat implements INodeType {
 					authorizationKey: string;
 				}>('gigaChatApi');
 
-				const httpsAgent = new Agent({
-					/**
-					 * Do not reject self-signed certificate of
-					 * Ministry of Digital Development, Communications and Mass Media
-					 */
-					rejectUnauthorized: false,
-				});
-
-				const gigaClient = new GigaChatClient({
+				await GigaChatApiClient.updateConfig({
 					credentials: credentials.authorizationKey,
-					httpsAgent,
 				});
 
-				const response = await gigaClient.getModels();
+				const response = await GigaChatApiClient.getModels();
 
 				return response.data.map((model: any) => ({
 					name: model.id,
@@ -196,11 +177,3 @@ export class LmGigaChat implements INodeType {
 		},
 	};
 }
-
-// export async function getGigaChatModels(this: ISupplyDataFunctions) {
-// 	const response = await this.getNode().;
-// 	return response.data.map((model: any) => ({
-// 		name: model.id,
-// 		value: model.id,
-// 	}));
-// }
