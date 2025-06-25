@@ -33,6 +33,7 @@ export class ChatGigaChat implements INodeType {
         },
         // eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
         inputs: [NodeConnectionType.Main, NodeConnectionType.AiMemory],
+        inputNames: ['Main', 'Memory'],
         // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
         outputs: [NodeConnectionType.Main],
         credentials: [
@@ -173,31 +174,35 @@ export class ChatGigaChat implements INodeType {
             const messages: Array<{ role: string; content: string }> = [];
 
             const memoryData = (await this.getInputConnectionData(NodeConnectionType.AiMemory, i, 0)) as any[];
-            if (Array.isArray(memoryData)) {
-                for (const entry of memoryData) {
-                    if (entry?.messages && Array.isArray(entry.messages)) {
-                        for (const m of entry.messages) {
-                            if (m.role && m.content) {
-                                messages.push({ role: m.role, content: m.content });
-                            }
+            let memory: any;
+            if (Array.isArray(memoryData) && memoryData.length > 0) {
+                const entry = memoryData[0];
+                memory = entry?.json?.memory ?? entry?.json ?? entry;
+                if (Array.isArray(memory?.messages)) {
+                    for (const m of memory.messages) {
+                        if (m.role && m.content) {
+                            messages.push({ role: m.role, content: m.content });
                         }
-                    } else if (entry?.role && entry?.content) {
-                        messages.push({ role: entry.role, content: entry.content });
                     }
                 }
             }
 
+            const newConversation: Array<{ role: string; content: string }> = [];
             for (const msg of messageCollection) {
                 const roleMap: Record<string, string> = {
                     system: 'system',
                     human: 'user',
                     ai: 'assistant',
                 };
-                messages.push({ role: roleMap[msg.type], content: msg.content });
+                const mapped = { role: roleMap[msg.type], content: msg.content };
+                messages.push(mapped);
+                newConversation.push(mapped);
             }
 
             if (userMessage) {
-                messages.push({ role: 'user', content: userMessage });
+                const userMsg = { role: 'user', content: userMessage };
+                messages.push(userMsg);
+                newConversation.push(userMsg);
             }
 
             if (cacheInput && sessionId) {
@@ -212,6 +217,9 @@ export class ChatGigaChat implements INodeType {
 
             let output: any;
             const text = response.choices?.[0]?.message?.content ?? '';
+            if (Array.isArray(memory?.messages)) {
+                memory.messages.push(...newConversation, { role: 'assistant', content: text });
+            }
             if (outputMode === 'withUsage') {
                 output = { text, usage: response.usage };
             } else if (outputMode === 'textOnly') {
