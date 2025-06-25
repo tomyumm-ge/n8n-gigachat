@@ -42,9 +42,10 @@
 		"credentials": [
 			"dist/credentials/GigaChatApi.credentials.js"
 		],
-		"nodes": [
-			"dist/nodes/llms/LmGigaChat/LmGigaChat.node.js"
-		]
+                "nodes": [
+                        "dist/nodes/llms/LmGigaChat/LmGigaChat.node.js"
+                        ,"dist/nodes/embeddings/EmGigaChat/EmGigaChat.node.js"
+                ]
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",
