@@ -99,10 +99,12 @@ export class EmGigaChat implements INodeType {
 
 				const response = await GigaChatApiClient.getModels();
 
-				return response.data.map((model: any) => ({
-					name: model.id,
-					value: model.id,
-				}));
+				return response.data
+					.filter((model: any) => model.name.toLowerCase().includes('embeddings'))
+					.map((model: any) => ({
+						name: model.id,
+						value: model.id,
+					}));
 			},
 		},
 	};
