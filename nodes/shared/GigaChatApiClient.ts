@@ -40,6 +40,43 @@ class GigaChatApiClientInstance extends GigaChat {
 			await this.updateToken();
 		}
 	}
+
+	async customCompletion(params: {
+		model: string;
+		messages: Array<{ role: string; content: string }>;
+		stream?: boolean;
+		update_interval?: number;
+		sessionId?: string;
+	}) {
+		// Ensure token is available
+		if (!this._accessToken) {
+			await this.updateToken();
+		}
+
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json',
+			Accept: 'application/json',
+			Authorization: `Bearer ${this._accessToken?.access_token}`,
+		};
+
+		// Add session ID if provided
+		if (params.sessionId) {
+			headers['X-Session-Id'] = params.sessionId;
+		}
+
+		const payload = {
+			model: params.model,
+			messages: params.messages,
+			stream: params.stream ?? false,
+			update_interval: params.update_interval ?? 0,
+		};
+
+		const response = await this._client.post('/chat/completions', payload, {
+			headers,
+		});
+
+		return response.data;
+	}
 }
 
 export const GigaChatApiClient = new GigaChatApiClientInstance({});

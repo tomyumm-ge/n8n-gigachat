@@ -32,10 +32,25 @@ export class ChatGigaChat implements INodeType {
 			},
 		},
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
-		inputs: [NodeConnectionType.Main, NodeConnectionType.AiMemory],
-		inputNames: ['Main', 'Memory'],
+		inputs: [
+			{
+				displayName: '',
+				type: NodeConnectionType.Main,
+			},
+			{
+				displayName: 'Memory',
+				type: NodeConnectionType.AiMemory,
+				required: true,
+				maxConnections: 1,
+			},
+		],
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
-		outputs: [NodeConnectionType.Main],
+		outputs: [
+			{
+				displayName: '',
+				type: NodeConnectionType.Main,
+			},
+		],
 		credentials: [
 			{
 				name: 'gigaChatApi',
@@ -178,6 +193,7 @@ export class ChatGigaChat implements INodeType {
 				i,
 				0,
 			)) as any[];
+			console.log('memoryData', memoryData);
 			let memory: any;
 			if (Array.isArray(memoryData) && memoryData.length > 0) {
 				const entry = memoryData[0];
@@ -213,7 +229,11 @@ export class ChatGigaChat implements INodeType {
 				(GigaChatApiClient as any)._client.defaults.headers['X-Session-Id'] = sessionId;
 			}
 
-			const response = await GigaChatApiClient.chat({ model: modelName, messages });
+			const response = await GigaChatApiClient.customCompletion({
+				model: modelName,
+				messages,
+				sessionId: cacheInput ? sessionId : undefined,
+			});
 
 			if (cacheInput && sessionId) {
 				delete (GigaChatApiClient as any)._client.defaults.headers['X-Session-Id'];
