@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-gigachat",
-	"version": "0.2.1",
+	"version": "1.3.0",
 	"description": "A user-friendly GigaChat AI (Sber) nodes for n8n",
 	"keywords": [
 		"gigachat",
@@ -44,7 +44,8 @@
 		],
 		"nodes": [
 			"dist/nodes/llms/LmGigaChat/LmGigaChat.node.js",
-			"dist/nodes/embeddings/EmGigaChat/EmGigaChat.node.js"
+			"dist/nodes/embeddings/EmGigaChat/EmGigaChat.node.js",
+			"dist/nodes/chat/GigaChat/GigaChat.node.js"
 		]
 	},
 	"devDependencies": {

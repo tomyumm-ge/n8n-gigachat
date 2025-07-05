@@ -12,7 +12,7 @@ import { GigaChatLcClient } from '../../shared/GigaChatLcClient';
 
 export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'GigaChat',
+		displayName: 'GigaChat Model',
 		name: 'lmGigaChat',
 		icon: 'file:gigachat.svg',
 		group: ['transform'],
