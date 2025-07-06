@@ -9,9 +9,16 @@ import {
 	NodeConnectionType,
 	NodeOperationError,
 } from 'n8n-workflow';
+import { BaseChatMemory } from 'langchain/memory';
 import { getConnectionHintNoticeField } from '../../../utils/sharedFields';
 import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
 import type { Message as GigaChatMessage, Function as GigaChatFunction, FunctionCall } from 'gigachat/interfaces';
+
+async function getOptionalMemory(ctx: IExecuteFunctions): Promise<BaseChatMemory | undefined> {
+	return (await ctx.getInputConnectionData(NodeConnectionType.AiMemory, 0)) as
+		| BaseChatMemory
+		| undefined;
+}
 
 export class GigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -20,7 +27,7 @@ export class GigaChat implements INodeType {
 		icon: 'file:gigachat.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Chat with GigaChat AI models with memory and tool support',
+		description: 'Chat with GigaChat AI models with full memory persistence and tool support',
 		defaults: {
 			name: 'GigaChat',
 		},
@@ -135,13 +142,6 @@ export class GigaChat implements INodeType {
 						},
 					},
 					{
-						displayName: 'Profanity Check',
-						name: 'profanityCheck',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to enable profanity filtering',
-					},
-					{
 						displayName: 'Repetition Penalty',
 						name: 'repetitionPenalty',
 						type: 'number',
@@ -238,18 +238,8 @@ export class GigaChat implements INodeType {
 		});
 
 		// Get connected nodes
-		let memory: IDataObject | undefined;
+		const memory = await getOptionalMemory(this);
 		let tools: IDataObject[] = [];
-
-		try {
-			// Try to get memory if connected
-			const memoryData = await this.getInputConnectionData(NodeConnectionType.AiMemory, 0);
-			if (memoryData) {
-				memory = memoryData as IDataObject;
-			}
-		} catch (error) {
-			// No memory connected, continue without it
-		}
 
 		try {
 			// Try to get tools if connected
@@ -279,11 +269,38 @@ export class GigaChat implements INodeType {
 				}
 
 				// Add chat history from memory if available (but skip system messages from history)
-				if (memory?.chatHistory && Array.isArray(memory.chatHistory)) {
-					const chatHistory = memory.chatHistory as GigaChatMessage[];
-					// Filter out any system messages from chat history since system message must be first
-					const nonSystemHistory = chatHistory.filter(msg => msg.role !== 'system');
-					messages.push(...nonSystemHistory);
+				if (memory) {
+					try {
+						// Get chat history from LangChain memory
+						const chatHistory = await memory.chatHistory.getMessages();
+						
+						// Convert LangChain messages to GigaChat format
+						let gigaChatMessages = chatHistory.map(msg => ({
+							role: msg._getType() === 'human' ? 'user' as const : 'assistant' as const,
+							content: msg.content.toString(),
+						}));
+						
+						// Apply context window length limit if specified in memory
+						const memoryInstance = memory as any;
+						let contextWindowLength: number | undefined;
+						
+						// Try to get contextWindowLength from memory node configuration
+						if (memoryInstance.contextWindowLength && typeof memoryInstance.contextWindowLength === 'number') {
+							contextWindowLength = memoryInstance.contextWindowLength;
+						} else if (memoryInstance.maxTokenLimit && typeof memoryInstance.maxTokenLimit === 'number') {
+							contextWindowLength = memoryInstance.maxTokenLimit;
+						}
+						
+						if (contextWindowLength && contextWindowLength > 0) {
+							// Keep only the most recent messages within the context window
+							gigaChatMessages = gigaChatMessages.slice(-contextWindowLength);
+						}
+						
+						// Add messages (no system messages in LangChain history)
+						messages.push(...gigaChatMessages);
+					} catch (error) {
+						console.log('Error loading chat history from memory:', error);
+					}
 				}
 
 				// Add current user message
@@ -347,11 +364,26 @@ export class GigaChat implements INodeType {
 				// Always set stream to false for now
 				chatRequest.stream = false;
 
-				// Get session ID from memory if available
+				// Get session ID from memory node's sessionKey if available
 				let sessionId: string | undefined;
-				console.log('memory', memory);
-				if (memory?.sessionId) {
-					sessionId = memory.sessionKey as string;
+				if (memory) {
+					try {
+						// Access the sessionKey from the memory node
+						const memoryInstance = memory as any;
+						
+						// Try different ways to get the sessionId
+						if (memoryInstance.sessionId) {
+							sessionId = memoryInstance.sessionId;
+						} else if (memoryInstance.chatHistory) {
+							const chatHistory = memoryInstance.chatHistory;
+							
+							if (chatHistory.sessionId) {
+								sessionId = chatHistory.sessionId;
+							}
+						}
+					} catch (error) {
+						console.log('Error loading session ID from memory:', error);
+					}
 				}
 
 				// Make the API call
@@ -406,10 +438,17 @@ export class GigaChat implements INodeType {
 					}
 				}
 
-				// Update memory with new messages including function calls
-				if (memory) {
-					// Always update with the current messages array which includes function calls and results
-					memory.chatHistory = messages;
+				// Save to memory if available
+				if (memory && responseMessage) {
+					try {
+						// Save the conversation to memory
+						await memory.saveContext(
+							{ input: prompt },
+							{ output: responseMessage.content || '' }
+						);
+					} catch (error) {
+						console.log('Error saving conversation to memory:', error);
+					}
 				}
 
 				// Get simplify output setting
@@ -422,7 +461,7 @@ export class GigaChat implements INodeType {
 						response: responseMessage.content || '',
 						model: modelId,
 						usage: response.usage,
-						sessionId: response.xHeaders?.xSessionID,
+						sessionId: response.xHeaders?.xSessionID || sessionId,
 						finishReason: response.choices[0]?.finish_reason,
 					};
 

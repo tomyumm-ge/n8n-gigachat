@@ -69,7 +69,6 @@ class GigaChatApiClientInstance extends GigaChat {
 
 		// Add session ID header if provided
 		if (sessionId) {
-			console.log('X-Session-ID', sessionId);
 			headers['X-Session-ID'] = sessionId;
 		}
 

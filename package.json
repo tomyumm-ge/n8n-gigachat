@@ -61,6 +61,7 @@
 		"n8n-workflow": "*"
 	},
 	"dependencies": {
+		"@langchain/community": "^0.3.48",
 		"gigachat": "^0.0.14",
 		"langchain-gigachat": "^0.0.11"
 	}
