@@ -18,7 +18,7 @@
 
 📌 **Ссылка на npm**: [n8n-nodes-gigachat](https://www.npmjs.com/package/n8n-nodes-gigachat)
 
-[GigaChat node installation](https://raw.githubusercontent.com/tomyumm-ge/n8n-gigachat/master/screenshots/screenshot_4.png)
+![GigaChat node installation](https://raw.githubusercontent.com/tomyumm-ge/n8n-gigachat/master/screenshots/screenshot_4.png)
 
 Буду рад фидбэку и предложениям по улучшению! 🚀
 
