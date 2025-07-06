@@ -10,7 +10,6 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 import { BaseChatMemory } from 'langchain/memory';
-import { getConnectionHintNoticeField } from '../../../utils/sharedFields';
 import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
 import type { Message as GigaChatMessage, Function as GigaChatFunction, FunctionCall } from 'gigachat/interfaces';
 
@@ -73,7 +72,6 @@ export class GigaChat implements INodeType {
 			skipSslCertificateValidation: true,
 		},
 		properties: [
-			getConnectionHintNoticeField([NodeConnectionType.AiMemory, NodeConnectionType.AiTool]),
 			{
 				displayName: 'Model',
 				name: 'modelId',
@@ -85,7 +83,7 @@ export class GigaChat implements INodeType {
 				default: 'GigaChat',
 			},
 			{
-				displayName: 'Prompt',
+				displayName: 'Prompt (User Message)',
 				name: 'prompt',
 				type: 'string',
 				required: true,
