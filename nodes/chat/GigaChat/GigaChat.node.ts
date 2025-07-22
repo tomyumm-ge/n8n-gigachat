@@ -205,9 +205,10 @@ export class GigaChat implements INodeType {
 					scope?: string;
 				}>('gigaChatApi');
 
+				const scope = credentials.scope ? String(credentials.scope) : 'GIGACHAT_API_PERS';
 				await GigaChatApiClient.updateConfig({
 					credentials: credentials.authorizationKey,
-					scope: credentials.scope || 'GIGACHAT_API_PERS',
+					scope: scope,
 				});
 
 				const response = await GigaChatApiClient.getModels();
@@ -227,10 +228,11 @@ export class GigaChat implements INodeType {
 		// Get credentials
 		const credentials = await this.getCredentials('gigaChatApi');
 		
-		// Initialize GigaChat client
+		// Initialize GigaChat client - ensure scope is properly used
+		const scope = credentials.scope ? String(credentials.scope) : 'GIGACHAT_API_PERS';
 		await GigaChatApiClient.updateConfig({
 			credentials: credentials.authorizationKey as string,
-			scope: (credentials.scope || 'GIGACHAT_API_PERS') as string,
+			scope: scope,
 			model: 'GigaChat',
 			timeout: 600,
 		});
@@ -314,13 +316,56 @@ export class GigaChat implements INodeType {
 						// Convert n8n tool parameters to GigaChat format
 						const toolParams = tool.parameters as any;
 						
+						// Handle different tool parameter formats
+						let properties = {};
+						let required: string[] = [];
+						
+						if (toolParams) {
+							if (typeof toolParams === 'object') {
+								properties = toolParams.properties || {};
+								required = toolParams.required || [];
+							} else if (typeof toolParams === 'string') {
+								// If parameters is a string, try to parse it
+								try {
+									const parsed = JSON.parse(toolParams);
+									properties = parsed.properties || {};
+									required = parsed.required || [];
+								} catch (e) {
+									// If parsing fails, use empty objects
+									properties = {};
+									required = [];
+								}
+							}
+						}
+						
+						// If no properties defined, check if tool has a schema
+						if (Object.keys(properties).length === 0 && tool.schema) {
+							// Some tools might have schema defined differently
+							const toolSchema = tool.schema as any;
+							if (toolSchema && typeof toolSchema === 'object' && toolSchema.properties) {
+								properties = toolSchema.properties;
+								required = toolSchema.required || [];
+							}
+						}
+						
+						// If still no properties, create a generic input parameter
+						if (Object.keys(properties).length === 0) {
+							properties = {
+								input: {
+									type: 'string',
+									description: 'Input for the tool'
+								}
+							};
+							required = ['input'];
+						}
+						
 						return {
 							name: tool.name as string,
-							description: tool.description as string,
+							description: tool.description as string || '',
 							parameters: {
 								type: "object",
-								properties: toolParams?.properties || {},
-								required: toolParams?.required || []
+								properties: properties,
+								required: required
 							}
 						};
 					});
@@ -401,23 +446,96 @@ export class GigaChat implements INodeType {
 					
 					if (matchingTool) {
 						try {
+							// Parse function arguments
+							let functionArgs;
+							try {
+								functionArgs = typeof functionCall.arguments === 'string' 
+									? JSON.parse(functionCall.arguments) 
+									: functionCall.arguments || {};
+							} catch (e) {
+								console.error('Error parsing function arguments:', e);
+								functionArgs = {};
+							}
+							
 							// Try to execute the tool - n8n tools might have different execution methods
 							let toolResult;
 							
-							if (matchingTool.execute) {
-								toolResult = await (matchingTool.execute as Function)(functionCall.arguments);
-							} else if (matchingTool.call) {
-								toolResult = await (matchingTool.call as Function)(functionCall.arguments);
-							} else {
-								toolResult = { error: 'Tool execution method not found', tool: matchingTool };
+							// For n8n DynamicTool (Vector Store), extract the string input
+							let toolInput = functionArgs;
+							if (matchingTool.constructor?.name === 'DynamicTool' || 
+								matchingTool.call && !matchingTool.execute) {
+								// DynamicTool expects a string input
+								if (typeof functionArgs === 'object') {
+									// Try to extract the first string value from the arguments
+									const firstKey = Object.keys(functionArgs)[0];
+									if (firstKey && typeof functionArgs[firstKey] === 'string') {
+										toolInput = functionArgs[firstKey];
+									} else {
+										toolInput = JSON.stringify(functionArgs);
+									}
+								}
 							}
 							
-							// Add function response to messages
+							if (typeof matchingTool.execute === 'function') {
+								toolResult = await matchingTool.execute(toolInput);
+							} else if (typeof matchingTool.call === 'function') {
+								toolResult = await matchingTool.call(toolInput);
+							} else if (typeof matchingTool.func === 'function') {
+								toolResult = await matchingTool.func(toolInput);
+							} else {
+								toolResult = { error: 'Tool execution method not found' };
+							}
+							
+							// Parse string results that might be JSON
+							let parsedResult = toolResult;
+							if (typeof toolResult === 'string') {
+								try {
+									parsedResult = JSON.parse(toolResult);
+								} catch (e) {
+									// Not JSON, keep as string
+								}
+							}
+							
+							// Add function call message
 							messages.push(responseMessage);
+							
+							// Add function response message
+							let functionResponseContent: string;
+							
+							// Handle empty array results from vector search
+							if (Array.isArray(parsedResult) && parsedResult.length === 0) {
+								functionResponseContent = JSON.stringify({
+									status: 'no_results',
+									message: 'No results found in the knowledge base for query: "' + toolInput + '"'
+								});
+							} else if (parsedResult === '[]' || parsedResult === '') {
+								functionResponseContent = JSON.stringify({
+									status: 'no_results',
+									message: 'No results found in the knowledge base for query: "' + toolInput + '"'
+								});
+							} else if (typeof parsedResult === 'string') {
+								// If it's already a JSON string, use it directly
+								try {
+									JSON.parse(parsedResult);
+									functionResponseContent = parsedResult;
+								} catch (e) {
+									// Not valid JSON, wrap it
+									functionResponseContent = JSON.stringify({
+										status: 'success',
+										result: parsedResult
+									});
+								}
+							} else {
+								functionResponseContent = JSON.stringify({
+									status: 'success',
+									result: parsedResult
+								});
+							}
+							
 							messages.push({
 								role: 'function',
 								name: functionCall.name,
-								content: JSON.stringify(toolResult),
+								content: functionResponseContent,
 							});
 
 							// Make another API call with the function result
@@ -427,12 +545,33 @@ export class GigaChat implements INodeType {
 							}, sessionId);
 
 							const finalMessage = finalResponse.choices[0]?.message;
-							if (finalMessage) {
+							if (finalMessage && finalMessage.content) {
 								responseMessage.content = finalMessage.content;
+							} else {
+								// If no content in final response, use the function result
+								responseMessage.content = `Tool ${functionCall.name} executed with result: ${functionResponseContent}`;
 							}
 						} catch (error) {
-							// Continue with the original response if tool execution fails
+							// Include error information in response
+							responseMessage.content = `Error executing tool ${functionCall.name}: ${error.message || String(error)}`;
+							
+							// Also add the error as a function response if we were in the middle of function calling
+							if (messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 1]?.function_call) {
+								const errorFunctionResponse = JSON.stringify({
+									status: 'error',
+									error: error.message || String(error)
+								});
+								
+								messages.push({
+									role: 'function',
+									name: functionCall.name,
+									content: errorFunctionResponse,
+								});
+							}
 						}
+					} else {
+						// Tool not found
+						responseMessage.content = `Tool ${functionCall.name} not found`;
 					}
 				}
 

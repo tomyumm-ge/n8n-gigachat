@@ -93,6 +93,37 @@ class GigaChatApiClientInstance extends GigaChat {
 			headers,
 		});
 
+		// Check for token expiration
+		if (response.status === 401 && response.data?.message?.includes('Token has expired')) {
+			// Token expired, try to refresh
+			this._accessToken = undefined;
+			await this.updateToken();
+			
+			// Retry with new token
+			const newTokenString = (this._accessToken as any).access_token || this._accessToken;
+			headers['Authorization'] = `Bearer ${newTokenString}`;
+			
+			const retryResponse = await freshClient.post('/chat/completions', data, { 
+				headers,
+			});
+			
+			if (retryResponse.status !== 200) {
+				throw new Error(`GigaChat API error: ${retryResponse.status} ${retryResponse.statusText} - ${JSON.stringify(retryResponse.data)}`);
+			}
+			
+			// Use retry response
+			const result = retryResponse.data as ChatCompletion;
+			const xHeaders = {
+				xRequestID: retryResponse.headers['x-request-id'] || '',
+				xSessionID: retryResponse.headers['x-session-id'] || '',
+				xClientID: retryResponse.headers['x-client-id'] || '',
+			};
+			
+			return {
+				...result,
+				xHeaders,
+			};
+		}
 
 		if (response.status !== 200) {
 			throw new Error(`GigaChat API error: ${response.status} ${response.statusText} - ${JSON.stringify(response.data)}`);
@@ -134,4 +165,24 @@ class GigaChatApiClientInstance extends GigaChat {
 	}
 }
 
-export const GigaChatApiClient = new GigaChatApiClientInstance({});
+class GigaChatApiClientWrapper extends GigaChatApiClientInstance {
+	// Override getModels to handle token expiration
+	async getModels() {
+		try {
+			// First try with existing token
+			const result = await super.getModels();
+			return result;
+		} catch (error: any) {
+			// Check if it's a token expiration error
+			if (error?.response?.status === 401 || error?.message?.includes('Token has expired')) {
+				// Clear token and retry
+				this._accessToken = undefined;
+				await this.updateToken();
+				return await super.getModels();
+			}
+			throw error;
+		}
+	}
+}
+
+export const GigaChatApiClient = new GigaChatApiClientWrapper({});
