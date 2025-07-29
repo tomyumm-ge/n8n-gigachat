@@ -60,8 +60,8 @@ class GigaChatApiClientInstance extends GigaChat {
 		// Prepare headers
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
-			'Accept': 'application/json',
-			'Authorization': `Bearer ${tokenString}`,
+			Accept: 'application/json',
+			Authorization: `Bearer ${tokenString}`,
 		};
 
 		// Add User-Agent (we're always in Node.js environment)
@@ -73,12 +73,11 @@ class GigaChatApiClientInstance extends GigaChat {
 		}
 
 		// Generate request ID for logging
-		headers['X-Request-ID'] = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-			const r = Math.random() * 16 | 0;
-			const v = c === 'x' ? r : (r & 0x3 | 0x8);
+		headers['X-Request-ID'] = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+			const r = (Math.random() * 16) | 0;
+			const v = c === 'x' ? r : (r & 0x3) | 0x8;
 			return v.toString(16);
 		});
-
 
 		// Create a fresh axios instance to avoid any configuration issues
 		const freshClient = axios.create({
@@ -89,7 +88,7 @@ class GigaChatApiClientInstance extends GigaChat {
 		});
 
 		// Make the request using the fresh client
-		const response = await freshClient.post('/chat/completions', data, { 
+		const response = await freshClient.post('/chat/completions', data, {
 			headers,
 		});
 
@@ -98,19 +97,21 @@ class GigaChatApiClientInstance extends GigaChat {
 			// Token expired, try to refresh
 			this._accessToken = undefined;
 			await this.updateToken();
-			
+
 			// Retry with new token
 			const newTokenString = (this._accessToken as any).access_token || this._accessToken;
 			headers['Authorization'] = `Bearer ${newTokenString}`;
-			
-			const retryResponse = await freshClient.post('/chat/completions', data, { 
+
+			const retryResponse = await freshClient.post('/chat/completions', data, {
 				headers,
 			});
-			
+
 			if (retryResponse.status !== 200) {
-				throw new Error(`GigaChat API error: ${retryResponse.status} ${retryResponse.statusText} - ${JSON.stringify(retryResponse.data)}`);
+				throw new Error(
+					`GigaChat API error: ${retryResponse.status} ${retryResponse.statusText} - ${JSON.stringify(retryResponse.data)}`,
+				);
 			}
-			
+
 			// Use retry response
 			const result = retryResponse.data as ChatCompletion;
 			const xHeaders = {
@@ -118,7 +119,7 @@ class GigaChatApiClientInstance extends GigaChat {
 				xSessionID: retryResponse.headers['x-session-id'] || '',
 				xClientID: retryResponse.headers['x-client-id'] || '',
 			};
-			
+
 			return {
 				...result,
 				xHeaders,
@@ -126,7 +127,9 @@ class GigaChatApiClientInstance extends GigaChat {
 		}
 
 		if (response.status !== 200) {
-			throw new Error(`GigaChat API error: ${response.status} ${response.statusText} - ${JSON.stringify(response.data)}`);
+			throw new Error(
+				`GigaChat API error: ${response.status} ${response.statusText} - ${JSON.stringify(response.data)}`,
+			);
 		}
 
 		// Return response with X-headers
@@ -157,6 +160,9 @@ class GigaChatApiClientInstance extends GigaChat {
 				scope: credentials.scope || 'GIGACHAT_API_PERS',
 				model: 'GigaChat',
 				timeout: 600,
+				authUrl: credentials.base_url
+					? `${credentials.base_url}/api/v2/oauth`
+					: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 			};
 			this.instance.updateConfig(config);
 		}

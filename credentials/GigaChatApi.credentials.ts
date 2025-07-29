@@ -50,6 +50,15 @@ export class GigaChatApi implements ICredentialType {
 				},
 			],
 		},
+		{
+			displayName: 'Base URL',
+			name: 'base_url',
+			type: 'string',
+			default: 'https://ngw.devices.sberbank.ru:9443',
+			required: true,
+			description:
+				'Base url for authorization flow (change it ONLY if you know what are you doing)',
+		},
 	];
 
 	authenticate: IAuthenticateGeneric = {
@@ -63,7 +72,7 @@ export class GigaChatApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: 'https://ngw.devices.sberbank.ru:9443',
+			baseURL: '={{$credentials.base_url ?? "https://ngw.devices.sberbank.ru:9443"}}',
 			url: '/api/v2/oauth',
 			method: 'POST',
 			headers: {

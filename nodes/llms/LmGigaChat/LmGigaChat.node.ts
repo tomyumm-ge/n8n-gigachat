@@ -141,6 +141,7 @@ export class LmGigaChat implements INodeType {
 		const credentials = await this.getCredentials<{
 			authorizationKey: string;
 			scope: string;
+			base_url?: string;
 		}>('gigaChatApi');
 
 		const modelName = this.getNodeParameter('model', itemIndex) as string;
@@ -149,6 +150,7 @@ export class LmGigaChat implements INodeType {
 			credentials: credentials.authorizationKey,
 			model: modelName,
 			scope: credentials.scope,
+			authUrl: credentials.base_url || 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 		});
 
 		return {
@@ -161,10 +163,16 @@ export class LmGigaChat implements INodeType {
 			async getGigaChatModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const credentials = await this.getCredentials<{
 					authorizationKey: string;
+					scope?: string;
+					base_url?: string;
 				}>('gigaChatApi');
 
 				await GigaChatApiClient.updateConfig({
 					credentials: credentials.authorizationKey,
+					scope: credentials.scope || 'GIGACHAT_API_PERS',
+					authUrl: credentials.base_url
+						? `${credentials.base_url}/api/v2/oauth`
+						: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 				});
 
 				const response = await GigaChatApiClient.getModels();
