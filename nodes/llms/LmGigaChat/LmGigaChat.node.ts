@@ -9,6 +9,7 @@ import {
 } from 'n8n-workflow';
 import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
 import { GigaChatLcClient } from '../../shared/GigaChatLcClient';
+import { disclaimerBlocks } from '../../shared/Disclaimers';
 
 export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -65,6 +66,7 @@ export class LmGigaChat implements INodeType {
 					},
 				},
 			},
+			...disclaimerBlocks,
 			{
 				displayName: 'Options',
 				name: 'options',

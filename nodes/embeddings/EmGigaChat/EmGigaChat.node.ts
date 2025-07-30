@@ -9,6 +9,7 @@ import {
 } from 'n8n-workflow';
 import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
 import { GigaChatEmbeddingsLcClient } from '../../shared/GigaChatEmbeddingsLcClient';
+import { disclaimerBlocks } from '../../shared/Disclaimers';
 
 export class EmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -64,6 +65,7 @@ export class EmGigaChat implements INodeType {
 					},
 				},
 			},
+			...disclaimerBlocks,
 		],
 	};
 
@@ -80,7 +82,9 @@ export class EmGigaChat implements INodeType {
 			credentials: credentials.authorizationKey,
 			model: modelName,
 			scope: credentials.scope,
-			authUrl: credentials.base_url ? `${credentials.base_url}/api/v2/oauth` : 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+			authUrl: credentials.base_url
+				? `${credentials.base_url}/api/v2/oauth`
+				: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 		});
 
 		return {
@@ -100,7 +104,9 @@ export class EmGigaChat implements INodeType {
 				await GigaChatApiClient.updateConfig({
 					credentials: credentials.authorizationKey,
 					scope: credentials.scope || 'GIGACHAT_API_PERS',
-					authUrl: credentials.base_url ? `${credentials.base_url}/api/v2/oauth` : 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+					authUrl: credentials.base_url
+						? `${credentials.base_url}/api/v2/oauth`
+						: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 				});
 
 				const response = await GigaChatApiClient.getModels();
