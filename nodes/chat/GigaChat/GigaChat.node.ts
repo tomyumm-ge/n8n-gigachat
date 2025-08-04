@@ -17,6 +17,7 @@ import type {
 	FunctionCall,
 } from 'gigachat/interfaces';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
+import removeMd from 'remove-markdown';
 
 async function getOptionalMemory(ctx: IExecuteFunctions): Promise<BaseChatMemory | undefined> {
 	return (await ctx.getInputConnectionData(NodeConnectionType.AiMemory, 0)) as
@@ -199,6 +200,14 @@ export class GigaChat implements INodeType {
 				type: 'boolean',
 				default: false,
 				description: 'Whether to return only the response text or include full statistics',
+			},
+			{
+				displayName: 'Remove Markdown',
+				name: 'removeMarkdown',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether to return formatted Markdown response, or try to clean up Markdown from AI message',
 			},
 		],
 	};
@@ -622,11 +631,21 @@ export class GigaChat implements INodeType {
 				// Get simplify output setting
 				const simplifyOutput = this.getNodeParameter('simplifyOutput', i) as boolean;
 
+				// Get Markdown remover setting
+				const removeMarkdown = this.getNodeParameter('removeMarkdown', i) as boolean;
+
+				let responseContent = responseMessage.content || '';
+
+				// Check if we need to remove markdown
+				if (removeMarkdown) {
+					responseContent = removeMd(responseContent);
+				}
+
 				// Prepare output based on simplify setting
 				const outputData = simplifyOutput
-					? { response: responseMessage.content || '' }
+					? { response: responseContent }
 					: {
-							response: responseMessage.content || '',
+							response: responseContent,
 							model: modelId,
 							usage: response.usage,
 							sessionId: response.xHeaders?.xSessionID || sessionId,
