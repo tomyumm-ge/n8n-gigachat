@@ -27,7 +27,7 @@ async function getOptionalMemory(ctx: IExecuteFunctions): Promise<BaseChatMemory
 
 export class GigaChat implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'GigaChat',
+		displayName: 'AI GigaChat',
 		name: 'gigaChat',
 		icon: 'file:gigachat.svg',
 		group: ['transform'],
