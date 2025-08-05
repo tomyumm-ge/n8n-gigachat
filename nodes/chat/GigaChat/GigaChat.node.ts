@@ -45,7 +45,7 @@ export class GigaChat implements INodeType {
 			resources: {
 				primaryDocumentation: [
 					{
-						url: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmgigachat/',
+						url: 'https://developers.sber.ru/docs/ru/gigachat/api/overview',
 					},
 				],
 			},
