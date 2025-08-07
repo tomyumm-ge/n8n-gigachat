@@ -15,7 +15,7 @@ export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'GigaChat Model',
 		name: 'lmGigaChat',
-		icon: 'file:gigachat.svg',
+		icon: 'file:../../gigachat.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'Language Models from Sberbank of Russia',

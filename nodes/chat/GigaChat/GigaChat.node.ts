@@ -27,9 +27,9 @@ async function getOptionalMemory(ctx: IExecuteFunctions): Promise<BaseChatMemory
 
 export class GigaChat implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'AI GigaChat',
+		displayName: 'GigaChat AI',
 		name: 'gigaChat',
-		icon: 'file:gigachat.svg',
+		icon: 'file:../../gigachat.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'Chat with GigaChat AI models with full memory persistence and tool support',
@@ -50,6 +50,7 @@ export class GigaChat implements INodeType {
 				],
 			},
 		},
+		// eslint-disable-next-line
 		inputs: [
 			NodeConnectionType.Main,
 			{
@@ -65,6 +66,7 @@ export class GigaChat implements INodeType {
 				maxConnections: Infinity,
 			},
 		],
+		// eslint-disable-next-line
 		outputs: [NodeConnectionType.Main],
 		outputNames: ['Response'],
 		credentials: [
@@ -79,13 +81,16 @@ export class GigaChat implements INodeType {
 		},
 		properties: [
 			{
+				// eslint-disable-next-line
 				displayName: 'Model',
 				name: 'modelId',
 				type: 'options',
-				description: 'The GigaChat model to use for chat completion',
+				// eslint-disable-next-line
+				description: 'Название и версия модели, которая сгенерирует ответ',
 				typeOptions: {
 					loadOptionsMethod: 'getGigaChatModels',
 				},
+				// eslint-disable-next-line
 				default: 'GigaChat',
 			},
 			{
@@ -94,12 +99,7 @@ export class GigaChat implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				placeholder: 'Type your message here',
-				displayOptions: {
-					show: {
-						'@version': [1],
-					},
-				},
+				placeholder: 'Напишите ваш промпт здесь...',
 				typeOptions: {
 					rows: 3,
 				},
@@ -110,38 +110,38 @@ export class GigaChat implements INodeType {
 				name: 'options',
 				type: 'collection',
 				default: {},
-				placeholder: 'Add Option',
+				placeholder: 'Add option',
 				options: [
 					{
-						displayName: 'Function Call Mode',
+						displayName: 'Function Calling Mode',
 						name: 'functionCall',
 						type: 'options',
 						default: 'auto',
-						description: 'How the model should handle function calls',
+						description: 'Как модель должна вести себя с функциями',
 						options: [
 							{
-								name: 'Auto',
+								name: 'Авто',
 								value: 'auto',
-								description: 'Model decides when to call functions',
+								description: 'Модель сама решает когда вызывать функции',
 							},
 							{
-								name: 'None',
+								name: 'Никогда',
 								value: 'none',
-								description: 'Model will not call functions',
+								description: 'Модель не будет вызывать функции',
 							},
 							{
-								name: 'Required',
+								name: 'Всегда',
 								value: 'required',
-								description: 'Model must call at least one function',
+								description: 'Модели обязательно нужно будет вызвать минимум одну функцию',
 							},
 						],
 					},
 					{
-						displayName: 'Max Tokens',
+						displayName: 'Maximum Tokens',
 						name: 'maxTokensToSample',
 						type: 'number',
 						default: 1024,
-						description: 'Maximum number of tokens to generate',
+						description: 'Как много можно генерировать токенов модели',
 						typeOptions: {
 							minValue: 1,
 						},
@@ -151,7 +151,7 @@ export class GigaChat implements INodeType {
 						name: 'repetitionPenalty',
 						type: 'number',
 						default: 1.0,
-						description: 'Penalty for repeated tokens',
+						description: 'Количество повторений слов. Значение 1.0 — нейтральное значение.',
 						typeOptions: {
 							minValue: 0.1,
 							maxValue: 2,
@@ -159,11 +159,11 @@ export class GigaChat implements INodeType {
 						},
 					},
 					{
-						displayName: 'System Message',
+						displayName: 'System Message (Prompt)',
 						name: 'systemMessage',
 						type: 'string',
 						default: '',
-						description: 'System message to set the behavior of the assistant',
+						description: 'Системное сообщение. Пишите сюда роль и инструкции ассистента.',
 						typeOptions: {
 							rows: 3,
 						},
@@ -173,7 +173,7 @@ export class GigaChat implements INodeType {
 						name: 'temperature',
 						type: 'number',
 						default: 0.7,
-						description: 'Controls randomness in generation (0-2)',
+						description: 'Чем выше значение, тем более случайным будет ответ модели (0-2)',
 						typeOptions: {
 							minValue: 0,
 							maxValue: 2,
@@ -185,7 +185,7 @@ export class GigaChat implements INodeType {
 						name: 'topP',
 						type: 'number',
 						default: 0.9,
-						description: 'Nucleus sampling parameter',
+						description: 'Задает вероятностную массу токенов, которые должна учитывать модель',
 						typeOptions: {
 							minValue: 0,
 							maxValue: 1,
@@ -195,19 +195,22 @@ export class GigaChat implements INodeType {
 				],
 			},
 			{
-				displayName: 'Simplify Output',
+				displayName: 'Упростить ответ модели',
 				name: 'simplifyOutput',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return only the response text or include full statistics',
+				// eslint-disable-next-line
+				description:
+					'Вернуть либо только текст ответа, либо оставить ещё больше информации о запросе',
 			},
 			{
-				displayName: 'Remove Markdown',
+				displayName: 'Убрать Markdown',
 				name: 'removeMarkdown',
 				type: 'boolean',
 				default: false,
+				// eslint-disable-next-line
 				description:
-					'Whether to return formatted Markdown response, or try to clean up Markdown from AI message',
+					'Либо оставить запрос форматированным, либо попытаться убрать всё форматирование (markdown)',
 			},
 		],
 	};

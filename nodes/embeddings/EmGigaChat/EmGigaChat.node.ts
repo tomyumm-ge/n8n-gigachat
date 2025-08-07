@@ -15,7 +15,7 @@ export class EmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'GigaChat Embeddings',
 		name: 'emGigaChat',
-		icon: 'file:gigachat.svg',
+		icon: 'file:../../gigachat.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'GigaChat Embeddings from Sberbank of Russia',
