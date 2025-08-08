@@ -7,16 +7,16 @@ import {
 	NodeConnectionType,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { disclaimerBlocks } from '../shared/Disclaimers';
-import { GigaChatApiClient } from '../shared/GigaChatApiClient';
-import { getGigaChatModels } from '../shared/GigaChatModels';
+import { disclaimerBlocks } from '../../shared/Disclaimers';
+import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
+import { getGigaChatModels } from '../../shared/GigaChatModels';
 import removeMd from 'remove-markdown';
 
 export class ApiGigaChat implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'GigaChat API',
 		name: 'apiGigaChat',
-		icon: 'file:../gigachat.svg',
+		icon: 'file:../../gigachat.svg',
 		group: ['input'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
