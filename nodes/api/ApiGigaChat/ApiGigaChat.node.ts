@@ -47,6 +47,7 @@ export class ApiGigaChat implements INodeType {
 						value: 'image',
 						description: 'Обработка изображений',
 					},
+					{ name: 'Токены', value: 'tokens', description: 'Мониторинг токенов' },
 				],
 				default: 'image',
 			},
@@ -69,6 +70,32 @@ export class ApiGigaChat implements INodeType {
 					},
 				],
 				default: 'analyze',
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: ['tokens'],
+					},
+				},
+				options: [
+					{
+						name: 'Посчитать токены',
+						value: 'count',
+						description: 'Посчитать токены в сообщении',
+						action: 'Count tokens in message',
+					},
+					{
+						name: 'Получить остатки',
+						value: 'balance',
+						description: 'Получить остаток токенов',
+						action: 'Get balance',
+					},
+				],
+				default: 'count',
 			},
 
 			// -------------------------
@@ -94,6 +121,11 @@ export class ApiGigaChat implements INodeType {
 				displayName: 'Учтите, что Lite модели не поддерживают обработку изображений',
 				name: 'unprocessable',
 				type: 'notice',
+				displayOptions: {
+					show: {
+						resource: ['image'],
+					},
+				},
 				default: '',
 			},
 			{
@@ -101,24 +133,30 @@ export class ApiGigaChat implements INodeType {
 				displayName: 'Model',
 				name: 'modelId',
 				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['image', 'tokens'],
+						operation: ['analyze', 'count'],
+					},
+				},
 				// eslint-disable-next-line
-				description: 'GigaChat модель, которая опишет изображение',
+				description: 'GigaChat модель, которая будет использована',
 				typeOptions: {
 					loadOptionsMethod: 'getGigaChatModels',
 				},
 				default: '',
 			},
 			{
-				displayName: 'Prompt',
+				displayName: 'Промпт',
 				name: 'prompt',
 				type: 'string',
 				required: true,
-				default: 'Опиши изображение',
+				default: '',
 				placeholder: 'Например, Опиши изображение...',
 				displayOptions: {
 					show: {
-						operation: ['analyze'],
-						resource: ['image'],
+						operation: ['analyze', 'count'],
+						resource: ['image', 'tokens'],
 					},
 				},
 				typeOptions: {
@@ -141,6 +179,14 @@ export class ApiGigaChat implements INodeType {
 				description:
 					'Либо оставить запрос форматированным, либо попытаться убрать всё форматирование (markdown)',
 			},
+
+			// -------------------------
+			//      tokens:count
+			// -------------------------
+
+			// -------------------------
+			//      tokens:balance
+			// -------------------------
 		],
 	};
 
@@ -154,10 +200,8 @@ export class ApiGigaChat implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		const operation = this.getNodeParameter('operation', 0);
-		const modelId = this.getNodeParameter('modelId', 0) as string;
-		const prompt = this.getNodeParameter('prompt', 0);
-		const binaryPropertyName = this.getNodeParameter('binaryPropertyName', 0);
+		const resource = this.getNodeParameter('resource', 0) as string;
+		const operation = this.getNodeParameter('operation', 0) as string;
 
 		const credentials = await this.getCredentials('gigaChatApi');
 
@@ -174,7 +218,13 @@ export class ApiGigaChat implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				if (operation === 'analyze') {
+				// -------------------------
+				//      image:analyze
+				// -------------------------
+				if (resource === 'image' && operation === 'analyze') {
+					const binaryPropertyName = this.getNodeParameter('binaryPropertyName', 0);
+					const modelId = this.getNodeParameter('modelId', 0) as string;
+					const prompt = this.getNodeParameter('prompt', 0) as string;
 					const itemBinaryData = items[i].binary![binaryPropertyName];
 					const itemBuffer = Buffer.from(itemBinaryData.data, BINARY_ENCODING);
 
@@ -213,6 +263,63 @@ export class ApiGigaChat implements INodeType {
 
 					const executionData = this.helpers.constructExecutionMetaData(
 						this.helpers.returnJsonArray({ response: finalMessage }),
+						{
+							itemData: { item: i },
+						},
+					);
+
+					if (Array.isArray(executionData)) {
+						returnData.push(...executionData);
+					} else {
+						returnData.push(executionData);
+					}
+				}
+				// -------------------------
+				//      tokens:count
+				// -------------------------
+				if (resource === 'tokens' && operation === 'count') {
+					const modelId = this.getNodeParameter('modelId', 0) as string;
+					const prompt = this.getNodeParameter('prompt', 0) as string;
+					const tokenCountResponse = await GigaChatApiClient.tokensCount([prompt], modelId);
+
+					const executionData = this.helpers.constructExecutionMetaData(
+						this.helpers.returnJsonArray({
+							response: {
+								tokens: tokenCountResponse.tokens[0].tokens,
+								characters: tokenCountResponse.tokens[0].characters,
+							},
+						}),
+						{
+							itemData: { item: i },
+						},
+					);
+
+					if (Array.isArray(executionData)) {
+						returnData.push(...executionData);
+					} else {
+						returnData.push(executionData);
+					}
+				}
+				// -------------------------
+				//      tokens:balance
+				// -------------------------
+				if (resource === 'tokens' && operation === 'balance') {
+					const tokenBalanceResponse = await GigaChatApiClient.balance();
+
+					// Пока не развито достаточно хорошо, чтобы сделать другое решение - расписываем сами
+					const usage = {
+						GigaChat:
+							tokenBalanceResponse.balance.find((el) => el.usage === 'GigaChat')?.value ?? 0,
+						'GigaChat-Pro':
+							tokenBalanceResponse.balance.find((el) => el.usage === 'GigaChat-Pro')?.value ?? 0,
+						'GigaChat-Max':
+							tokenBalanceResponse.balance.find((el) => el.usage === 'GigaChat-Max')?.value ?? 0,
+						embeddings:
+							tokenBalanceResponse.balance.find((el) => el.usage === 'embeddings')?.value ?? 0,
+					};
+
+					const executionData = this.helpers.constructExecutionMetaData(
+						this.helpers.returnJsonArray({ response: usage }),
 						{
 							itemData: { item: i },
 						},
