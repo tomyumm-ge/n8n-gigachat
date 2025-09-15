@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-gigachat",
-	"version": "1.6.0",
+	"version": "1.6.1",
 	"description": "A user-friendly GigaChat AI (Sber) nodes for n8n",
 	"keywords": [
 		"gigachat",
@@ -60,6 +60,12 @@
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
+	},
+	"overrides": {
+		"n8n-workflow": {
+			"axios": "^1.12.0",
+			"form-data": "^4.0.4"
+		}
 	},
 	"dependencies": {
 		"@langchain/community": "^0.3.48",
