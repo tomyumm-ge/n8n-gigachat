@@ -7,6 +7,7 @@ import { GigaChat } from 'gigachat';
 import { GigaChatClientConfig } from 'gigachat';
 import { HttpsAgent } from './HttpsAgent';
 import type { Chat, ChatCompletion, WithXHeaders } from 'gigachat/interfaces';
+import { ResponseError } from 'gigachat/exceptions';
 
 class GigaChatApiClientInstance extends GigaChat {
 	authorizationKey: string | null = null;
@@ -186,6 +187,33 @@ class GigaChatApiClientWrapper extends GigaChatApiClientInstance {
 				await this.updateToken();
 				return await super.getModels();
 			}
+
+			if (error instanceof ResponseError) {
+				const response = error.response;
+				const errorData = response.data;
+
+				// Extract error message from GigaChat API response
+				let errorMessage = 'Unknown error';
+
+				if (typeof errorData === 'string') {
+					errorMessage = errorData;
+				} else if (errorData?.message) {
+					errorMessage = errorData.message;
+				} else if (errorData?.detail) {
+					errorMessage = errorData.detail;
+				} else if (errorData?.error) {
+					errorMessage = errorData.error;
+				} else if (errorData?.error_description) {
+					errorMessage = errorData.error_description;
+				} else {
+					// Fallback to full JSON if no known field found
+					errorMessage = JSON.stringify(errorData);
+				}
+
+				// Include status code and full error info
+				throw new Error(`GigaChat API error (${response.status}): ${errorMessage}`);
+			}
+
 			throw error;
 		}
 	}
