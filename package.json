@@ -69,7 +69,7 @@
 	},
 	"dependencies": {
 		"@langchain/community": "^0.3.48",
-		"gigachat": "^0.0.14",
+		"gigachat": "^0.0.17",
 		"langchain-gigachat": "^0.0.11",
 		"remove-markdown": "^0.6.2"
 	}
