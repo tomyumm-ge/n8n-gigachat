@@ -1,15 +1,6 @@
-import {
-	ILoadOptionsFunctions,
-	INodePropertyOptions,
-	INodeType,
-	INodeTypeDescription,
-	ISupplyDataFunctions,
-	NodeConnectionType,
-	SupplyData,
-} from 'n8n-workflow';
-import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
-import { GigaChatLcClient } from '../../shared/GigaChatLcClient';
+import { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
+import { getLangchainGigaChatModels, supplyLangchainGigaChatInstance } from './utils';
 
 export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -18,14 +9,14 @@ export class LmGigaChat implements INodeType {
 		icon: 'file:../../gigachat.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Language Models from Sberbank of Russia',
+		description: 'Языковые модели от Сбера',
 		defaults: {
 			name: 'GigaChat Model',
 		},
 		codex: {
 			categories: ['AI'],
 			subcategories: {
-				AI: ['Language Models', 'Root Nodes'],
+				AI: ['Language Models'],
 				'Language Models': ['Text Completion Models'],
 			},
 		},
@@ -50,11 +41,13 @@ export class LmGigaChat implements INodeType {
 		},
 		properties: [
 			{
-				displayName: 'Model Name or ID',
+				...disclaimerBlocks,
+				// eslint-disable-next-line
+				displayName: 'Имя модели',
 				name: 'model',
 				type: 'options',
-				description:
-					'The name of the model to use. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				// eslint-disable-next-line
+				description: 'Какую модель использовать для чата',
 				default: '',
 				typeOptions: {
 					loadOptionsMethod: 'getGigaChatModels',
@@ -66,17 +59,16 @@ export class LmGigaChat implements INodeType {
 					},
 				},
 			},
-			...disclaimerBlocks,
 			{
-				displayName: 'Options',
+				displayName: 'Настройки',
 				name: 'options',
-				placeholder: 'Add Option',
-				description: 'Additional options for the model',
+				placeholder: 'Добавить настройку',
+				description: 'Дополнительные настройки для модели',
 				type: 'collection',
 				default: {},
 				options: [
 					{
-						displayName: 'Max Tokens',
+						displayName: 'Макс. токенов',
 						name: 'maxTokens',
 						type: 'number',
 						default: 1000,
@@ -91,7 +83,7 @@ export class LmGigaChat implements INodeType {
 						},
 					},
 					{
-						displayName: 'Temperature',
+						displayName: 'Температура',
 						name: 'temperature',
 						type: 'number',
 						default: 0.8,
@@ -139,51 +131,11 @@ export class LmGigaChat implements INodeType {
 		],
 	};
 
-	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
-		const credentials = await this.getCredentials<{
-			authorizationKey: string;
-			scope: string;
-			base_url?: string;
-		}>('gigaChatApi');
-
-		const modelName = this.getNodeParameter('model', itemIndex) as string;
-
-		await GigaChatLcClient.updateConfig({
-			credentials: credentials.authorizationKey,
-			model: modelName,
-			scope: credentials.scope,
-			authUrl: credentials.base_url || 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
-		});
-
-		return {
-			response: GigaChatLcClient,
-		};
-	}
+	supplyData = supplyLangchainGigaChatInstance;
 
 	methods = {
 		loadOptions: {
-			async getGigaChatModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials<{
-					authorizationKey: string;
-					scope?: string;
-					base_url?: string;
-				}>('gigaChatApi');
-
-				await GigaChatApiClient.updateConfig({
-					credentials: credentials.authorizationKey,
-					scope: credentials.scope || 'GIGACHAT_API_PERS',
-					authUrl: credentials.base_url
-						? `${credentials.base_url}/api/v2/oauth`
-						: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
-				});
-
-				const response = await GigaChatApiClient.getModels();
-
-				return response.data.map((model: any) => ({
-					name: model.id,
-					value: model.id,
-				}));
-			},
+			getGigaChatModels: getLangchainGigaChatModels,
 		},
 	};
 }

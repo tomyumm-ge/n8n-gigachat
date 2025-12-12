@@ -1,15 +1,6 @@
-import {
-	ILoadOptionsFunctions,
-	INodePropertyOptions,
-	INodeType,
-	INodeTypeDescription,
-	ISupplyDataFunctions,
-	NodeConnectionType,
-	SupplyData,
-} from 'n8n-workflow';
-import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
-import { GigaChatEmbeddingsLcClient } from '../../shared/GigaChatEmbeddingsLcClient';
+import { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
+import { emLoadGigaChatModels, supplyEmbeddingsModel } from './utils';
 
 export class EmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -48,12 +39,14 @@ export class EmGigaChat implements INodeType {
 			},
 		},
 		properties: [
+			...disclaimerBlocks,
 			{
-				displayName: 'Model Name or ID',
+				// eslint-disable-next-line
+				displayName: 'Имя модели',
 				name: 'model',
 				type: 'options',
-				description:
-					'The name of the model to use. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				// eslint-disable-next-line
+				description: 'Имя модели для векторизации',
 				default: '',
 				typeOptions: {
 					loadOptionsMethod: 'getGigaChatModels',
@@ -65,59 +58,14 @@ export class EmGigaChat implements INodeType {
 					},
 				},
 			},
-			...disclaimerBlocks,
 		],
 	};
 
-	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
-		const credentials = await this.getCredentials<{
-			authorizationKey: string;
-			scope: string;
-			base_url?: string;
-		}>('gigaChatApi');
-
-		const modelName = this.getNodeParameter('model', itemIndex) as string;
-
-		await GigaChatEmbeddingsLcClient.updateConfig({
-			credentials: credentials.authorizationKey,
-			model: modelName,
-			scope: credentials.scope,
-			authUrl: credentials.base_url
-				? `${credentials.base_url}/api/v2/oauth`
-				: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
-		});
-
-		return {
-			response: GigaChatEmbeddingsLcClient,
-		};
-	}
+	supplyData = supplyEmbeddingsModel;
 
 	methods = {
 		loadOptions: {
-			async getGigaChatModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials<{
-					authorizationKey: string;
-					scope?: string;
-					base_url?: string;
-				}>('gigaChatApi');
-
-				await GigaChatApiClient.updateConfig({
-					credentials: credentials.authorizationKey,
-					scope: credentials.scope || 'GIGACHAT_API_PERS',
-					authUrl: credentials.base_url
-						? `${credentials.base_url}/api/v2/oauth`
-						: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
-				});
-
-				const response = await GigaChatApiClient.getModels();
-
-				return response.data
-					.filter((model: any) => model.id?.toLowerCase()?.includes('embeddings'))
-					.map((model: any) => ({
-						name: model.id,
-						value: model.id,
-					}));
-			},
+			getGigaChatModels: emLoadGigaChatModels,
 		},
 	};
 }

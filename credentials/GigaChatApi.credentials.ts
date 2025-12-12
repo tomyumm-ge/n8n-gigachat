@@ -1,10 +1,5 @@
-import {
-	IAuthenticateGeneric,
-	Icon,
-	ICredentialTestRequest,
-	ICredentialType,
-	INodeProperties,
-} from 'n8n-workflow';
+import { Icon, ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
+import { disclaimerBlocks } from '../nodes/shared/Disclaimers';
 
 export class GigaChatApi implements ICredentialType {
 	name = 'gigaChatApi';
@@ -12,9 +7,12 @@ export class GigaChatApi implements ICredentialType {
 		light: 'file:gigachat-light.svg',
 		dark: 'file:gigachat-dark.svg',
 	};
-	displayName = 'GigaChat API';
-	documentationUrl = 'https://developers.sber.ru/docs/ru/gigachat/individuals-quickstart';
+	// eslint-disable-next-line n8n-nodes-base/cred-class-field-display-name-missing-api
+	displayName = 'GigaChat';
+	documentationUrl =
+		'https://developers.sber.ru/docs/ru/gigachat/quickstart/ind-using-api#poluchenie-avtorizatsionnyh-dannyh';
 	properties: INodeProperties[] = [
+		...disclaimerBlocks,
 		{
 			displayName: 'Authorization key',
 			name: 'authorizationKey',
@@ -51,31 +49,37 @@ export class GigaChatApi implements ICredentialType {
 			],
 		},
 		{
-			displayName: 'Base URL',
+			type: 'notice',
+			name: 'change_warning',
+			default: '',
+			displayName:
+				'<b>Base URL</b><br/>Поля ниже редактируйте, только если действительно знаете, что делаете',
+		},
+		{
+			displayName: 'Base Auth URL',
 			name: 'base_url',
 			type: 'string',
 			default: 'https://ngw.devices.sberbank.ru:9443',
 			required: true,
-			description:
-				'Base url for authorization flow (change it ONLY if you know what are you doing)',
+			description: 'Базовый url для авторизации',
 		},
 		{
-			displayName:
-				'<b>Неофициальный проект</b><br/>На ваш страх и риск. Это не сберовский узел. <a href="https://github.com/tomyumm-ge/n8n-gigachat/wiki/%E2%9A%A0%EF%B8%8F-Disclaimers">Узнать подробнее</a>',
-			name: 'unofficialWarning',
-			type: 'notice',
-			default: '',
+			displayName: 'Base Backend URL',
+			name: 'base_back_url',
+			type: 'string',
+			default: 'https://gigachat.devices.sberbank.ru/api/v1',
+			required: true,
+			description: 'Базовый url для GigaChat API',
+		},
+		{
+			displayName: 'Debug',
+			name: 'debug',
+			type: 'boolean',
+			default: false,
+			required: true,
+			description: 'Включить отладку в консоли n8n',
 		},
 	];
-
-	authenticate: IAuthenticateGeneric = {
-		type: 'generic',
-		properties: {
-			headers: {
-				Authorization: '={{"Basic " + $credentials.authorizationKey}}',
-			},
-		},
-	};
 
 	test: ICredentialTestRequest = {
 		request: {
