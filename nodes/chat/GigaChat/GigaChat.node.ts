@@ -1,6 +1,7 @@
 import { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
-import { chatGigaChatExecute, chatLoadGigaChatModels } from './utils';
+import { chatLoadGigaChatModels } from './utils';
+import { gigaChatWithModel } from '../../shared/methods/ChatWithModel';
 
 export class GigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -45,7 +46,7 @@ export class GigaChat implements INodeType {
 		],
 		// eslint-disable-next-line
 		outputs: [NodeConnectionType.Main],
-		outputNames: ['Response'],
+		outputNames: [''],
 		credentials: [
 			{
 				name: 'gigaChatApi',
@@ -108,6 +109,17 @@ export class GigaChat implements INodeType {
 								description: 'Модель не будет вызывать функции',
 							},
 						],
+					},
+					{
+						displayName: 'Макс. итераций вызова функций',
+						name: 'maxIterations',
+						type: 'number',
+						default: 5,
+						description:
+							'Сколько максимально инструментов может вызвать GigaChat прежде, чем мы будем считать это бесконечным циклом',
+						typeOptions: {
+							minValue: 1,
+						},
 					},
 					{
 						displayName: 'Макс. токенов',
@@ -194,5 +206,5 @@ export class GigaChat implements INodeType {
 		},
 	};
 
-	execute = chatGigaChatExecute;
+	execute = gigaChatWithModel;
 }
