@@ -2,6 +2,8 @@
 
 # n8n-nodes-gigachat
 
+_n8n 2.0 совместимый, используйте последний релиз_
+
 **_Неофициальный Community узел. Разработано энтузиастами. Официальные интеграции изучайте на официальном сайте [developers.sber.ru](https://developers.sber.ru/dev)._**
 
 n8n-nodes-gigachat (вы здесь) | [**n8n-nodes-salutespeech**](https://github.com/tomyumm-ge/n8n-salutespeech)
