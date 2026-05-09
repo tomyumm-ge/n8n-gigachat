@@ -68,7 +68,6 @@
 		}
 	},
 	"dependencies": {
-		"@langchain/community": "^0.3.48",
 		"@langchain/core": "^0.3.79",
 		"gigachat": "^0.0.20",
 		"langchain-gigachat": "^0.0.18",
