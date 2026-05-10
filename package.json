@@ -66,12 +66,11 @@
 		"n8n-workflow": "*"
 	},
 	"overrides": {
-		"n8n-workflow": {
-			"axios": "^1.12.0",
-			"form-data": "^4.0.4"
-		}
+		"axios": "^1.13.5",
+		"form-data": "^4.0.4"
 	},
 	"dependencies": {
+		"axios": "^1.13.5",
 		"gigachat": "^0.0.20",
 		"langchain-gigachat": "^0.0.18",
 		"remove-markdown": "^0.6.4"
