@@ -1,9 +1,9 @@
 import { IDataObject, IExecuteFunctions } from 'n8n-workflow';
-import { BaseChatMemory, BufferWindowMemory } from 'langchain/memory';
+import { BaseMemory } from '@langchain/core/memory';
 import { Message } from 'gigachat/interfaces';
 import { BaseMessage } from '@langchain/core/messages';
 
-export type MemoryType = BufferWindowMemory | BaseChatMemory | undefined;
+export type MemoryType = BaseMemory | undefined;
 
 export async function convertMessagesGigachat(
 	ctx: IExecuteFunctions,
