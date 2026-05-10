@@ -50,6 +50,8 @@
 		]
 	},
 	"devDependencies": {
+		"@langchain/community": "^1.1.28",
+		"@langchain/core": "^1.1.45",
 		"@types/node": "^22.14.1",
 		"@typescript-eslint/parser": "^8.31.0",
 		"eslint": "^9.25.1",
@@ -59,6 +61,8 @@
 		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
+		"@langchain/community": ">=0.3.0",
+		"@langchain/core": ">=0.3.0",
 		"n8n-workflow": "*"
 	},
 	"overrides": {
@@ -68,7 +72,6 @@
 		}
 	},
 	"dependencies": {
-		"@langchain/core": "^0.3.79",
 		"gigachat": "^0.0.20",
 		"langchain-gigachat": "^0.0.18",
 		"remove-markdown": "^0.6.4"
