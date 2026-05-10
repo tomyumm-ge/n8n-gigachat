@@ -67,7 +67,6 @@ export class GigaChat implements INodeType {
 				typeOptions: {
 					loadOptionsMethod: 'getGigaChatModels',
 				},
-				// eslint-disable-next-line
 				default: 'GigaChat',
 			},
 			{

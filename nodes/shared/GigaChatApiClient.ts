@@ -88,7 +88,8 @@ class GigaChatApiClientInstance extends GigaChat {
 			this._accessToken = undefined;
 			await this.updateToken();
 
-			headers['Authorization'] = `Bearer ${(this._accessToken as any).access_token || this._accessToken}`;
+			headers['Authorization'] =
+				`Bearer ${(this._accessToken as any).access_token || this._accessToken}`;
 
 			const retryResponse = await freshClient.post('/chat/completions', data, {
 				headers,
