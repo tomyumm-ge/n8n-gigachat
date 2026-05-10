@@ -1,4 +1,4 @@
-import { IExecuteFunctions, NodeConnectionType } from 'n8n-workflow';
+import { IExecuteFunctions } from 'n8n-workflow';
 import { FunctionCall, Function as GigaFunction } from 'gigachat/interfaces';
 
 export async function prepareGigaTools(
@@ -7,7 +7,7 @@ export async function prepareGigaTools(
 	let tools: any[] = [];
 
 	try {
-		const toolsData = await ctx.getInputConnectionData(NodeConnectionType.AiTool, 0);
+		const toolsData = await ctx.getInputConnectionData('ai_tool', 0);
 		if (toolsData) {
 			tools = Array.isArray(toolsData) ? toolsData : [toolsData];
 		}

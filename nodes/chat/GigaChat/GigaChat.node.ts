@@ -1,4 +1,4 @@
-import { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
+import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
 import { chatLoadGigaChatModels } from './utils';
 import { gigaChatWithModel } from '../../shared/methods/ChatWithModel';
@@ -28,24 +28,22 @@ export class GigaChat implements INodeType {
 				],
 			},
 		},
-		// eslint-disable-next-line
 		inputs: [
-			NodeConnectionType.Main,
+			'main',
 			{
-				type: NodeConnectionType.AiMemory,
+				type: 'ai_memory',
 				displayName: 'Memory',
 				required: false,
 				maxConnections: 1,
 			},
 			{
-				type: NodeConnectionType.AiTool,
+				type: 'ai_tool',
 				displayName: 'Tools',
 				required: false,
 				maxConnections: Infinity,
 			},
 		],
-		// eslint-disable-next-line
-		outputs: [NodeConnectionType.Main],
+		outputs: ['main'],
 		outputNames: [''],
 		credentials: [
 			{

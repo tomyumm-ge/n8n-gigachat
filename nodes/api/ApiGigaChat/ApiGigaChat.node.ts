@@ -1,4 +1,4 @@
-import { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
+import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
 import { getGigaChatModels } from '../../shared/GigaChatModels';
 import { apiGigaChatExecute } from './utils';
@@ -16,10 +16,8 @@ export class ApiGigaChat implements INodeType {
 			name: 'GigaChat API',
 		},
 		usableAsTool: true,
-		// eslint-disable-next-line
-		inputs: [NodeConnectionType.Main],
-		// eslint-disable-next-line
-		outputs: [NodeConnectionType.Main],
+		inputs: ['main'],
+		outputs: ['main'],
 		credentials: [
 			{
 				name: 'gigaChatApi',

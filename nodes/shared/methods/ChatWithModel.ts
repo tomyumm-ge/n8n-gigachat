@@ -1,9 +1,4 @@
-import {
-	IDataObject,
-	IExecuteFunctions,
-	INodeExecutionData,
-	NodeConnectionType,
-} from 'n8n-workflow';
+import { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { GigaCredential } from '../ts/GigaChatCredentials';
 import { Message as GigaMessage } from 'gigachat/interfaces';
 import { executeGigaTool, formatGigaToolResult, prepareGigaTools } from './Tools';
@@ -14,7 +9,7 @@ import { convertMessagesGigachat, MemoryType } from './Memory';
 import removeMd from 'remove-markdown';
 
 async function getOptionalMemory(ctx: IExecuteFunctions): Promise<MemoryType> {
-	return (await ctx.getInputConnectionData(NodeConnectionType.AiMemory, 0)) as MemoryType;
+	return (await ctx.getInputConnectionData('ai_memory', 0)) as MemoryType;
 }
 
 export async function gigaChatWithModel(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
