@@ -72,5 +72,9 @@
 		"gigachat": "^0.0.20",
 		"langchain-gigachat": "^0.0.18",
 		"remove-markdown": "^0.6.4"
+	},
+	"allowScripts": {
+		"eslint-plugin-n8n-nodes-base@1.16.6": true,
+		"isolated-vm@6.1.2": true
 	}
 }
