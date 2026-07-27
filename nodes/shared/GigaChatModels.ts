@@ -1,5 +1,6 @@
 import { ILoadOptionsFunctions, INodePropertyOptions } from 'n8n-workflow';
 import { GigaChatApiClient } from './GigaChatApiClient';
+import { Model } from 'gigachat/interfaces/model';
 
 export async function getGigaChatModels(
 	this: ILoadOptionsFunctions,
@@ -13,16 +14,7 @@ export async function getGigaChatModels(
 
 	const nodeName = this.getNode().type;
 	// e.g. CUSTOM.apiGigaChat
-	let filterExpression = '';
-	if (nodeName.indexOf('apiGigaChat') !== -1) {
-		filterExpression = 'Embeddings.*';
-	}
-	if (nodeName.indexOf('gigaChat') !== -1) {
-		filterExpression = 'Embeddings.*';
-	}
-	if (nodeName.indexOf('emGigaChat') !== -1) {
-		filterExpression = 'Giga.*';
-	}
+	const isEmbedder = nodeName.indexOf('emGigaChat') !== -1;
 
 	const scope = credentials.scope ? String(credentials.scope) : 'GIGACHAT_API_PERS';
 	await GigaChatApiClient.updateConfig({
@@ -39,9 +31,14 @@ export async function getGigaChatModels(
 	const response = await GigaChatApiClient.getModels();
 
 	return response.data
+		.filter((model: Model) => {
+			if (isEmbedder) {
+				return model.type === 'embedder';
+			}
+			return model.type === 'chat';
+		})
 		.map((model: any) => ({
 			name: model.id,
 			value: model.id,
-		}))
-		.filter((model: any) => !model.value.match(new RegExp(filterExpression, 'gi')));
+		}));
 }

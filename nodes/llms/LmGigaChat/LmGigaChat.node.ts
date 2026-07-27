@@ -1,6 +1,7 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
-import { getLangchainGigaChatModels, supplyLangchainGigaChatInstance } from './utils';
+import { supplyLangchainGigaChatInstance } from './utils';
+import { getGigaChatModels } from '../../shared/GigaChatModels';
 
 export class LmGigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -135,7 +136,7 @@ export class LmGigaChat implements INodeType {
 
 	methods = {
 		loadOptions: {
-			getGigaChatModels: getLangchainGigaChatModels,
+			getGigaChatModels,
 		},
 	};
 }
