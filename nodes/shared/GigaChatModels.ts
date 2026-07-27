@@ -8,6 +8,7 @@ export async function getGigaChatModels(
 		authorizationKey: string;
 		scope?: string;
 		base_url?: string;
+		base_back_url?: string;
 	}>('gigaChatApi');
 
 	const nodeName = this.getNode().type;
@@ -30,6 +31,9 @@ export async function getGigaChatModels(
 		authUrl: credentials.base_url
 			? `${credentials.base_url}/api/v2/oauth`
 			: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+		baseUrl: credentials.base_back_url
+			? `${credentials.base_back_url}`
+			: 'https://gigachat.devices.sberbank.ru/api/v1',
 	});
 
 	const response = await GigaChatApiClient.getModels();
