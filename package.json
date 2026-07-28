@@ -50,10 +50,10 @@
 		]
 	},
 	"devDependencies": {
-		"@langchain/core": "^0.3.80",
+		"@langchain/core": "^1.2.3",
 		"@types/node": "^22.14.1",
 		"@typescript-eslint/parser": "^8.31.0",
-		"eslint": "^9.25.1",
+		"eslint": "^10.8.0",
 		"eslint-plugin-n8n-nodes-base": "^1.16.3",
 		"gulp": "^5.0.0",
 		"prettier": "^3.8.3",
@@ -75,6 +75,7 @@
 	},
 	"allowScripts": {
 		"eslint-plugin-n8n-nodes-base@1.16.6": true,
-		"isolated-vm@6.1.2": true
+		"isolated-vm@6.1.2": true,
+		"ssh2@1.15.0": true
 	}
 }
