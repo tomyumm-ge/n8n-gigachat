@@ -57,7 +57,7 @@
 		"@types/node": "^22.14.1",
 		"eslint": "^9.39.4",
 		"prettier": "^3.8.3",
-		"typescript": "^5.9.3"
+		"typescript": "^7.0.2"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
