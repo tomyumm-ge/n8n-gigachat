@@ -54,7 +54,7 @@
 	"devDependencies": {
 		"@langchain/core": "^1.2.3",
 		"@n8n/node-cli": "^0.41.2",
-		"@types/node": "^22.14.1",
+		"@types/node": "^26.1.2",
 		"eslint": "^9.39.4",
 		"prettier": "^3.8.3",
 		"typescript": "^5.9.3"
