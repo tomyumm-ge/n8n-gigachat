@@ -28,11 +28,13 @@
 	},
 	"main": "index.js",
 	"scripts": {
-		"build": "tsc && gulp build:icons",
-		"dev": "tsc --watch",
-		"format": "prettier nodes credentials --write",
-		"lint": "eslint nodes credentials package.json",
-		"lintfix": "eslint nodes credentials package.json --fix"
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
 	},
 	"files": [
 		"dist"
@@ -51,13 +53,11 @@
 	},
 	"devDependencies": {
 		"@langchain/core": "^1.2.3",
+		"@n8n/node-cli": "^0.41.2",
 		"@types/node": "^22.14.1",
-		"@typescript-eslint/parser": "^8.31.0",
-		"eslint": "^10.8.0",
-		"eslint-plugin-n8n-nodes-base": "^1.16.3",
-		"gulp": "^5.0.0",
+		"eslint": "^9.39.4",
 		"prettier": "^3.8.3",
-		"typescript": "^5.8.3"
+		"typescript": "^5.9.3"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
@@ -74,7 +74,8 @@
 		"remove-markdown": "^0.6.4"
 	},
 	"allowScripts": {
-		"eslint-plugin-n8n-nodes-base@1.16.6": true,
+		"eslint-plugin-n8n-nodes-base@1.16.7": true,
+		"unrs-resolver@1.12.2": true,
 		"isolated-vm@6.1.2": true,
 		"ssh2@1.15.0": true
 	}
