@@ -1,6 +1,29 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { FunctionCall, Function as GigaFunction } from 'gigachat/interfaces';
 
+function zodShapeOf(schema: any): Record<string, any> | null {
+	if (!schema || typeof schema !== 'object') return null;
+	if (schema.shape && typeof schema.shape === 'object') return schema.shape;
+	if (schema._def && typeof schema._def.shape === 'function') {
+		try {
+			return schema._def.shape();
+		} catch (e) {}
+	}
+	return null;
+}
+
+function zodTypeOf(field: any): string {
+	const name =
+		(field && field.constructor && field.constructor.name) ||
+		(field && field._def && field._def.typeName) ||
+		'';
+	if (/ZodString/.test(name)) return 'string';
+	if (/ZodNumber/.test(name)) return 'number';
+	if (/ZodBoolean/.test(name)) return 'boolean';
+	if (/ZodArray/.test(name)) return 'array';
+	return 'string';
+}
+
 export async function prepareGigaTools(
 	ctx: IExecuteFunctions,
 ): Promise<{ functions: GigaFunction[]; tools: any[] }> {
@@ -41,9 +64,35 @@ export async function prepareGigaTools(
 
 			// If no properties defined, check if tool has a schema
 			if (Object.keys(properties).length === 0 && tool.schema) {
-				// Some tools might have schema defined differently
 				const toolSchema = tool.schema as any;
-				if (toolSchema && typeof toolSchema === 'object' && toolSchema.properties) {
+				// Zod schemas (DynamicStructuredTool) have no `.properties`; walk the shape instead
+				const shape = zodShapeOf(toolSchema);
+				if (shape && Object.keys(shape).length > 0) {
+					for (const key of Object.keys(shape)) {
+						const field = shape[key];
+						const prop: any = { type: zodTypeOf(field) };
+						if (field && typeof field.description === 'string') {
+							prop.description = field.description;
+						}
+						if (prop.type === 'array') {
+							const el = field.element || (field._def && field._def.type);
+							if (el) prop.items = { type: zodTypeOf(el) };
+						}
+						properties[key] = prop;
+						let optional = false;
+						try {
+							optional =
+								typeof (field && field.isOptional) === 'function'
+									? field.isOptional()
+									: !!(
+											field &&
+											typeof field.safeParse === 'function' &&
+											field.safeParse(undefined).success
+										);
+						} catch (e) {}
+						if (!optional) required.push(key);
+					}
+				} else if (toolSchema && typeof toolSchema === 'object' && toolSchema.properties) {
 					properties = toolSchema.properties;
 					required = toolSchema.required || [];
 				}
@@ -92,7 +141,15 @@ export async function executeGigaTool(tool: any, functionCall: FunctionCall): Pr
 
 	// For n8n DynamicTool (Vector Store), extract the string input
 	let toolInput = functionArgs;
-	if (tool.constructor?.name === 'DynamicTool' || (tool.call && !tool.execute)) {
+	// Structured tools must receive the parsed arguments OBJECT; coercing it to a
+	// string makes their zod validation fail ("Expected object, received string").
+	const isStructuredTool =
+		tool.constructor?.name === 'DynamicStructuredTool' ||
+		typeof (tool.schema && tool.schema.safeParse) === 'function';
+	if (
+		!isStructuredTool &&
+		(tool.constructor?.name === 'DynamicTool' || (tool.call && !tool.execute))
+	) {
 		// DynamicTool expects a string input
 		if (typeof functionArgs === 'object') {
 			// Try to extract the first string value from the arguments
