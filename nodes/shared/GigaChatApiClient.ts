@@ -17,7 +17,10 @@ class GigaChatApiClientInstance extends GigaChat {
 	}
 
 	async updateConfig(config: GigaChatClientConfig, shouldUpdateToken = true) {
-		if (this.authorizationKey !== config.credentials) {
+		if (
+			this.authorizationKey !== config.credentials ||
+			(config.authUrl && this._settings.authUrl !== config.authUrl)
+		) {
 			this.authorizationKey = config.credentials ?? null;
 			this._settings = { ...this._settings, ...config };
 			const axiosConfig = {
