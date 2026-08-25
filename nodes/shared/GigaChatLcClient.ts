@@ -22,10 +22,10 @@ class GigaChatLcClientInstance extends GigaChat {
 		const modelChanged = this.model !== (config.model ?? '');
 		const credentialsChanged = this.authorizationKey !== config.credentials;
 
+		await GigaChatApiClient.updateConfig(config);
 		if (credentialsChanged || modelChanged) {
 			this.authorizationKey = config.credentials ?? null;
 			this.model = config.model ?? '';
-			await GigaChatApiClient.updateConfig(config);
 			// Обновляем модель в базовом классе, если она изменилась
 			this._settings = { ...this._settings, ...config, model: this.model };
 			this._client = GigaChatApiClient;

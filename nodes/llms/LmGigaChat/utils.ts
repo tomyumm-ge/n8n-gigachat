@@ -9,6 +9,7 @@ export async function supplyLangchainGigaChatInstance(
 		authorizationKey: string;
 		scope: string;
 		base_url?: string;
+		base_back_url?: string;
 	}>('gigaChatApi');
 
 	const modelName = this.getNodeParameter('model', itemIndex) as string;
@@ -17,6 +18,7 @@ export async function supplyLangchainGigaChatInstance(
 		credentials: credentials.authorizationKey,
 		model: modelName,
 		scope: credentials.scope,
+		baseUrl: credentials.base_back_url,
 		authUrl: credentials.base_url || 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 	});
 

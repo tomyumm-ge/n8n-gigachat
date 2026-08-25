@@ -20,6 +20,7 @@ export async function apiGigaChatExecute(this: IExecuteFunctions): Promise<INode
 	await GigaChatApiClient.updateConfig({
 		credentials: credentials.authorizationKey as string,
 		scope: scope,
+		baseUrl: credentials.base_back_url,
 		model: 'GigaChat',
 		timeout: 600,
 		authUrl: credentials.base_url
