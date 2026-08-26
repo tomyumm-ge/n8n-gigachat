@@ -1,76 +1,30 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
-import globals from 'globals';
-import tsParser from '@typescript-eslint/parser';
-import n8nNodesBase from 'eslint-plugin-n8n-nodes-base';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
+import { configWithoutCloudSupport } from '@n8n/node-cli/eslint';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-	baseDirectory: __dirname,
-	recommendedConfig: js.configs.recommended,
-	allConfig: js.configs.all,
-});
+const n8nConventionRules = Object.fromEntries(
+	configWithoutCloudSupport
+		.flatMap((entry) => Object.keys(entry.rules ?? {}))
+		.filter(
+			(rule) =>
+				rule.startsWith('@n8n/community-nodes/') || rule.startsWith('n8n-nodes-base/'),
+		)
+		.map((rule) => [rule, 'off']),
+);
 
-export default defineConfig([
-	globalIgnores(['**/.eslintrc.js', '**/*.js', '**/node_modules/**/*', '**/dist/**/*']),
+export default [
+	...configWithoutCloudSupport,
 	{
-		languageOptions: {
-			globals: {
-				...globals.browser,
-				...globals.node,
-			},
-
-			parser: tsParser,
-			ecmaVersion: 5,
-			sourceType: 'module',
-
-			parserOptions: {
-				project: ['./tsconfig.json'],
-				extraFileExtensions: ['.json'],
-			},
+		files: ['**/*.ts', 'package.json'],
+		linterOptions: {
+			reportUnusedDisableDirectives: 'off',
 		},
-	},
-	{
-		files: ['**/package.json'],
-		extends: compat.extends('plugin:n8n-nodes-base/community'),
-
-		plugins: {
-			'n8n-nodes-base': n8nNodesBase,
-		},
-
 		rules: {
-			'n8n-nodes-base/community-package-json-name-still-default': 'off',
+			...n8nConventionRules,
+			// Preserve the project's existing TypeScript and runtime-boundary conventions.
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-unused-vars': 'off',
+			'import-x/no-duplicates': 'off',
+			'no-console': 'off',
+			'no-empty': 'off',
 		},
 	},
-	{
-		files: ['./credentials/**/*.ts'],
-		extends: compat.extends('plugin:n8n-nodes-base/credentials'),
-
-		plugins: {
-			'n8n-nodes-base': n8nNodesBase,
-		},
-
-		rules: {
-			'n8n-nodes-base/cred-class-field-documentation-url-missing': 'off',
-			'n8n-nodes-base/cred-class-field-documentation-url-miscased': 'off',
-		},
-	},
-	{
-		files: ['./nodes/**/*.ts'],
-		extends: compat.extends('plugin:n8n-nodes-base/nodes'),
-
-		plugins: {
-			'n8n-nodes-base': n8nNodesBase,
-		},
-
-		rules: {
-			'n8n-nodes-base/node-execute-block-missing-continue-on-fail': 'off',
-			'n8n-nodes-base/node-resource-description-filename-against-convention': 'off',
-			'n8n-nodes-base/node-param-fixed-collection-type-unsorted-items': 'off',
-		},
-	},
-]);
+];
