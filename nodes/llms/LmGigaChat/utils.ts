@@ -17,7 +17,9 @@ export async function supplyLangchainGigaChatInstance(
 		credentials: credentials.authorizationKey,
 		model: modelName,
 		scope: credentials.scope,
-		authUrl: credentials.base_url || 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+		authUrl: credentials.base_url
+			? `${credentials.base_url}/api/v2/oauth`
+			: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
 	});
 
 	return {
