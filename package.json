@@ -52,12 +52,12 @@
 		]
 	},
 	"devDependencies": {
-		"@langchain/core": "^1.2.3",
-		"@n8n/node-cli": "^0.41.2",
-		"@types/node": "^22.14.1",
-		"eslint": "^9.39.4",
-		"prettier": "^3.8.3",
-		"typescript": "^5.9.3"
+		"@langchain/core": "^1.2.5",
+		"@n8n/node-cli": "^0.42.2",
+		"@types/node": "^26.1.2",
+		"eslint": "^10.8.0",
+		"prettier": "^3.9.6",
+		"typescript": "^6.0.3"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
@@ -74,7 +74,7 @@
 		"remove-markdown": "^0.6.4"
 	},
 	"allowScripts": {
-		"eslint-plugin-n8n-nodes-base@1.16.7": true,
+		"eslint-plugin-n8n-nodes-base": false,
 		"unrs-resolver@1.12.2": true,
 		"isolated-vm@6.1.2": true,
 		"ssh2@1.15.0": true
