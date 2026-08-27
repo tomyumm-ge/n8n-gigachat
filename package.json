@@ -53,7 +53,7 @@
 	},
 	"devDependencies": {
 		"@langchain/core": "^1.2.5",
-		"@n8n/node-cli": "^0.42.2",
+		"@n8n/node-cli": "^0.45.3",
 		"@types/node": "^26.1.2",
 		"eslint": "^10.8.0",
 		"prettier": "^3.9.6",
