@@ -38,17 +38,17 @@ export class GigaChatApi implements ICredentialType {
 			options: [
 				{
 					name: 'GIGACHAT_API_PERS',
-					description: 'Individual account',
+					description: 'Физические лица',
 					value: 'GIGACHAT_API_PERS',
 				},
 				{
 					name: 'GIGACHAT_API_B2B',
-					description: 'Business account (token packages)',
+					description: 'Юридические лица (по пакетам токенов)',
 					value: 'GIGACHAT_API_B2B',
 				},
 				{
 					name: 'GIGACHAT_API_CORP',
-					description: 'Business account (pay-as-you-go)',
+					description: 'Юридические лица (pay-as-you-go)',
 					value: 'GIGACHAT_API_CORP',
 				},
 			],
@@ -61,7 +61,7 @@ export class GigaChatApi implements ICredentialType {
 				'<b>Base URL</b><br/>Поля ниже редактируйте, только если действительно знаете, что делаете',
 		},
 		{
-			displayName: 'Base Auth URL',
+			displayName: 'Базовый URL Авторизации',
 			name: 'base_url',
 			type: 'string',
 			default: DEFAULT_GIGACHAT_AUTH_URL,
@@ -70,7 +70,7 @@ export class GigaChatApi implements ICredentialType {
 				'Полный URL OAuth endpoint. Адрес с путём используется без изменений; для старых значений без пути добавляется /api/v2/oauth',
 		},
 		{
-			displayName: 'Base Backend URL',
+			displayName: 'Базовый URL Бэкенда',
 			name: 'base_back_url',
 			type: 'string',
 			default: DEFAULT_GIGACHAT_BASE_URL,
@@ -78,7 +78,7 @@ export class GigaChatApi implements ICredentialType {
 			description: 'Базовый url для GigaChat API',
 		},
 		{
-			displayName: 'Debug',
+			displayName: 'Режим отладки',
 			name: 'debug',
 			type: 'boolean',
 			default: false,
