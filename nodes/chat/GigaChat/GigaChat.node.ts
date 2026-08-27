@@ -2,6 +2,7 @@ import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { disclaimerBlocks } from '../../shared/Disclaimers';
 import { gigaChatWithModel } from '../../shared/methods/ChatWithModel';
 import { getGigaChatModels } from '../../shared/GigaChatModels';
+import { GIGACHAT_BASE_URL_EXPRESSION } from '../../shared/GigaChatUrls';
 
 export class GigaChat implements INodeType {
 	description: INodeTypeDescription = {
@@ -52,7 +53,7 @@ export class GigaChat implements INodeType {
 			},
 		],
 		requestDefaults: {
-			baseURL: '={{ $credentials.baseUrl || "https://gigachat.devices.sberbank.ru/api/v1" }}',
+			baseURL: GIGACHAT_BASE_URL_EXPRESSION,
 			skipSslCertificateValidation: true,
 		},
 		properties: [

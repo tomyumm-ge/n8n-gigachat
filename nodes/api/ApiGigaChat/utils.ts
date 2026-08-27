@@ -6,6 +6,8 @@ import {
 } from 'n8n-workflow';
 import { GigaChatApiClient } from '../../shared/GigaChatApiClient';
 import removeMd from 'remove-markdown';
+import { resolveGigaChatUrls } from '../../shared/GigaChatUrls';
+import type { GigaCredential } from '../../shared/ts/GigaChatCredentials';
 
 export async function apiGigaChatExecute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const items = this.getInputData();
@@ -14,7 +16,7 @@ export async function apiGigaChatExecute(this: IExecuteFunctions): Promise<INode
 	const resource = this.getNodeParameter('resource', 0) as string;
 	const operation = this.getNodeParameter('operation', 0) as string;
 
-	const credentials = await this.getCredentials('gigaChatApi');
+	const credentials = await this.getCredentials<GigaCredential>('gigaChatApi');
 
 	const scope = credentials.scope ? String(credentials.scope) : 'GIGACHAT_API_PERS';
 	await GigaChatApiClient.updateConfig({
@@ -22,9 +24,7 @@ export async function apiGigaChatExecute(this: IExecuteFunctions): Promise<INode
 		scope: scope,
 		model: 'GigaChat',
 		timeout: 600,
-		authUrl: credentials.base_url
-			? `${credentials.base_url}/api/v2/oauth`
-			: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+		...resolveGigaChatUrls(credentials),
 	});
 
 	for (let i = 0; i < items.length; i++) {

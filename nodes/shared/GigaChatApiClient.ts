@@ -8,18 +8,34 @@ import { GigaChatClientConfig } from 'gigachat';
 import { HttpsAgent } from './HttpsAgent';
 import type { Chat, ChatCompletion, WithXHeaders } from 'gigachat/interfaces';
 import { ResponseError } from 'gigachat/exceptions';
+import {
+	resolveGigaChatAuthUrl,
+	resolveGigaChatBaseUrl,
+	resolveGigaChatUrls,
+} from './GigaChatUrls';
 
 class GigaChatApiClientInstance extends GigaChat {
 	authorizationKey: string | null = null;
 
-	constructor(config: GigaChatClientConfig) {
-		super({ ...config, httpsAgent: HttpsAgent });
+	constructor(config: GigaChatClientConfig = {}) {
+		super({
+			...config,
+			authUrl: resolveGigaChatAuthUrl(config.authUrl),
+			baseUrl: resolveGigaChatBaseUrl(config.baseUrl),
+			httpsAgent: HttpsAgent,
+		});
 	}
 
 	async updateConfig(config: GigaChatClientConfig, shouldUpdateToken = true) {
+		config = {
+			...config,
+			authUrl: resolveGigaChatAuthUrl(config.authUrl),
+			baseUrl: resolveGigaChatBaseUrl(config.baseUrl),
+		};
 		if (
 			this.authorizationKey !== config.credentials ||
-			(config.authUrl && this._settings.authUrl !== config.authUrl)
+			this._settings.authUrl !== config.authUrl ||
+			this._settings.baseUrl !== config.baseUrl
 		) {
 			this.authorizationKey = config.credentials ?? null;
 			this._settings = { ...this._settings, ...config };
@@ -77,7 +93,7 @@ class GigaChatApiClientInstance extends GigaChat {
 		});
 
 		const freshClient = axios.create({
-			baseURL: this._settings.baseUrl || 'https://gigachat.devices.sberbank.ru/api/v1',
+			baseURL: resolveGigaChatBaseUrl(this._settings.baseUrl),
 			httpsAgent: HttpsAgent,
 			timeout: 30000,
 			validateStatus: () => true,
@@ -149,9 +165,7 @@ class GigaChatApiClientInstance extends GigaChat {
 				scope: credentials.scope || 'GIGACHAT_API_PERS',
 				model: 'GigaChat',
 				timeout: 600,
-				authUrl: credentials.base_url
-					? `${credentials.base_url}/api/v2/oauth`
-					: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+				...resolveGigaChatUrls(credentials),
 			};
 			this.instance.updateConfig(config);
 		}

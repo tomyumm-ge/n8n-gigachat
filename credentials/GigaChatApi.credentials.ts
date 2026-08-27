@@ -1,5 +1,10 @@
 import { Icon, ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
 import { disclaimerBlocks } from '../nodes/shared/Disclaimers';
+import {
+	DEFAULT_GIGACHAT_AUTH_URL,
+	DEFAULT_GIGACHAT_BASE_URL,
+	GIGACHAT_AUTH_URL_EXPRESSION,
+} from '../nodes/shared/GigaChatUrls';
 
 export class GigaChatApi implements ICredentialType {
 	name = 'gigaChatApi';
@@ -59,15 +64,16 @@ export class GigaChatApi implements ICredentialType {
 			displayName: 'Base Auth URL',
 			name: 'base_url',
 			type: 'string',
-			default: 'https://ngw.devices.sberbank.ru:9443',
+			default: DEFAULT_GIGACHAT_AUTH_URL,
 			required: true,
-			description: 'Базовый url для авторизации',
+			description:
+				'Полный URL OAuth endpoint. Адрес с путём используется без изменений; для старых значений без пути добавляется /api/v2/oauth',
 		},
 		{
 			displayName: 'Base Backend URL',
 			name: 'base_back_url',
 			type: 'string',
-			default: 'https://gigachat.devices.sberbank.ru/api/v1',
+			default: DEFAULT_GIGACHAT_BASE_URL,
 			required: true,
 			description: 'Базовый url для GigaChat API',
 		},
@@ -83,8 +89,7 @@ export class GigaChatApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.base_url ?? "https://ngw.devices.sberbank.ru:9443"}}',
-			url: '/api/v2/oauth',
+			url: GIGACHAT_AUTH_URL_EXPRESSION,
 			method: 'POST',
 			headers: {
 				RqUID:

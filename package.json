@@ -28,6 +28,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "n8n-node build",
+		"test": "npm run build && node --test tests/*.test.cjs",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",

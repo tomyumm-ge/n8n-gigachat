@@ -16,9 +16,9 @@ n8n-nodes-gigachat (вы здесь) | [**n8n-nodes-salutespeech**](https://gith
 
 ## Обновленный ендпоинт
 
-Я точно не знаю, будут ли убирать старый ендпоинт, или не будут. Поэтому я заранее оставлю здесь информацию для тех, кто ищет модель **GigaChat 3 Ultra**.
+Новые подключения по умолчанию используют адрес `https://api.giga.chat/v1`. Он подходит и для модели **GigaChat 3 Ultra**.
 
-Зайдите в настройки вашего Credential и поменяйте Base Backend URL на `https://api.giga.chat/v1`:
+Если подключение уже было настроено, его адрес не изменится. Чтобы перейти на новый адрес, откройте настройки Credential и поменяйте **Base Backend URL** на `https://api.giga.chat/v1`:
 
 ![New GigaChat Endpoint Settings](https://raw.githubusercontent.com/tomyumm-ge/n8n-gigachat/master/screenshots/screenshot_6.png)
 

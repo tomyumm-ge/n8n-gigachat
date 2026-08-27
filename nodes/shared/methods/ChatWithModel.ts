@@ -7,6 +7,7 @@ import { Chat as ChatWithModel } from 'gigachat/interfaces';
 import { GigaChatApiClient } from '../GigaChatApiClient';
 import { convertMessagesGigachat, MemoryType } from './Memory';
 import removeMd from 'remove-markdown';
+import { resolveGigaChatUrls } from '../GigaChatUrls';
 
 async function getOptionalMemory(ctx: IExecuteFunctions): Promise<MemoryType> {
 	return (await ctx.getInputConnectionData('ai_memory', 0)) as MemoryType;
@@ -28,14 +29,11 @@ export async function gigaChatWithModel(this: IExecuteFunctions): Promise<INodeE
 		accessToken,
 		credentials: credentials.authorizationKey,
 		scope: credentials.scope,
-		baseUrl: credentials.base_back_url,
-		authUrl: credentials.base_url
-			? `${credentials.base_url}/api/v2/oauth`
-			: 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+		...resolveGigaChatUrls(credentials),
 		verbose: credentials.debug,
 	};
 
-	GigaChatApiClient.updateConfig(configUpdate, !accessToken);
+	await GigaChatApiClient.updateConfig(configUpdate, !accessToken);
 
 	const memory = await getOptionalMemory(this);
 
