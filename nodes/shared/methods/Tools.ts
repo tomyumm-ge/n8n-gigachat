@@ -1,27 +1,60 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 import { FunctionCall, Function as GigaFunction } from 'gigachat/interfaces';
+import { toJsonSchema } from '@langchain/core/utils/json_schema';
 
-function zodShapeOf(schema: any): Record<string, any> | null {
-	if (!schema || typeof schema !== 'object') return null;
-	if (schema.shape && typeof schema.shape === 'object') return schema.shape;
-	if (schema._def && typeof schema._def.shape === 'function') {
-		try {
-			return schema._def.shape();
-		} catch (e) {}
-	}
-	return null;
+type ToolSchema = Record<string, any>;
+
+function isObject(value: unknown): value is Record<string, any> {
+	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function zodTypeOf(field: any): string {
-	const name =
-		(field && field.constructor && field.constructor.name) ||
-		(field && field._def && field._def.typeName) ||
-		'';
-	if (/ZodString/.test(name)) return 'string';
-	if (/ZodNumber/.test(name)) return 'number';
-	if (/ZodBoolean/.test(name)) return 'boolean';
-	if (/ZodArray/.test(name)) return 'array';
-	return 'string';
+function getToolSchema(tool: any): ToolSchema | undefined {
+	// The schema used by the tool's validator takes precedence over display metadata.
+	let source = tool.schema ?? tool.parameters;
+	if (source == null) return undefined;
+
+	try {
+		if (typeof source === 'string') source = JSON.parse(source);
+		if (!isObject(source)) throw new Error('Expected an object schema');
+		// Use the input schema: defaults/transforms are applied by the tool, not the model.
+		// LangChain supports Zod 3/4 from other package copies without instanceof checks.
+		const converted: unknown = toJsonSchema(source, { io: 'input' });
+		if (!isObject(converted)) throw new Error('Expected a JSON Schema object');
+		const { $schema, ...schema } = converted;
+		return schema;
+	} catch (error) {
+		throw new Error(
+			`Cannot convert schema for tool "${tool.name}": ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+}
+
+function isLegacyStringTool(tool: any): boolean {
+	// Only used for old tools with no schema. A .call method does not imply string input.
+	return (
+		tool.constructor?.name === 'DynamicTool' || tool.constructor?.lc_name?.() === 'DynamicTool'
+	);
+}
+
+function getToolParameters(tool: any, schema = getToolSchema(tool)): GigaFunction['parameters'] {
+	if (schema === undefined || schema.type === 'string') {
+		return {
+			type: 'object',
+			properties: { input: schema ?? { type: 'string', description: 'Input for the tool' } },
+			required: ['input'],
+		};
+	}
+	if (schema.type !== 'object' && !(schema.type === undefined && isObject(schema.properties))) {
+		throw new Error(`Unsupported input schema for tool "${tool.name}": expected object or string`);
+	}
+	// Keep the entire schema, including nested required fields, enums, definitions and refs.
+	// An empty object is a valid no-argument tool, not a reason to invent an input field.
+	return {
+		...schema,
+		type: 'object',
+		properties: schema.properties ?? {},
+		required: schema.required ?? [],
+	};
 }
 
 export async function prepareGigaTools(
@@ -31,148 +64,47 @@ export async function prepareGigaTools(
 
 	try {
 		const toolsData = await ctx.getInputConnectionData('ai_tool', 0);
-		if (toolsData) {
-			tools = Array.isArray(toolsData) ? toolsData : [toolsData];
-		}
+		if (toolsData) tools = Array.isArray(toolsData) ? toolsData : [toolsData];
 	} catch (error) {}
 
-	const functions: GigaFunction[] = [];
-	if (tools.length > 0) {
-		for (const tool of tools) {
-			const toolParams = tool.parameters as any;
-
-			let properties = {};
-			let required: string[] = [];
-
-			if (toolParams) {
-				if (typeof toolParams === 'object') {
-					properties = toolParams.properties || {};
-					required = toolParams.required || [];
-				} else if (typeof toolParams === 'string') {
-					// If parameters is a string, try to parse it
-					try {
-						const parsed = JSON.parse(toolParams);
-						properties = parsed.properties || {};
-						required = parsed.required || [];
-					} catch (e) {
-						// If parsing fails, use empty objects
-						properties = {};
-						required = [];
-					}
-				}
-			}
-
-			// If no properties defined, check if tool has a schema
-			if (Object.keys(properties).length === 0 && tool.schema) {
-				const toolSchema = tool.schema as any;
-				// Zod schemas (DynamicStructuredTool) have no `.properties`; walk the shape instead
-				const shape = zodShapeOf(toolSchema);
-				if (shape && Object.keys(shape).length > 0) {
-					for (const key of Object.keys(shape)) {
-						const field = shape[key];
-						const prop: any = { type: zodTypeOf(field) };
-						if (field && typeof field.description === 'string') {
-							prop.description = field.description;
-						}
-						if (prop.type === 'array') {
-							const el = field.element || (field._def && field._def.type);
-							if (el) prop.items = { type: zodTypeOf(el) };
-						}
-						properties[key] = prop;
-						let optional = false;
-						try {
-							optional =
-								typeof (field && field.isOptional) === 'function'
-									? field.isOptional()
-									: !!(
-											field &&
-											typeof field.safeParse === 'function' &&
-											field.safeParse(undefined).success
-										);
-						} catch (e) {}
-						if (!optional) required.push(key);
-					}
-				} else if (toolSchema && typeof toolSchema === 'object' && toolSchema.properties) {
-					properties = toolSchema.properties;
-					required = toolSchema.required || [];
-				}
-			}
-
-			// If still no properties, create a generic input parameter
-			if (Object.keys(properties).length === 0) {
-				properties = {
-					input: {
-						type: 'string',
-						description: 'Input for the tool',
-					},
-				};
-				required = ['input'];
-			}
-
-			functions.push({
-				name: tool.name as string,
-				description: (tool.description as string) || '',
-				parameters: {
-					type: 'object',
-					properties: properties,
-					required: required,
-				},
-			});
-		}
-	}
-
+	const functions: GigaFunction[] = tools.map((tool) => ({
+		name: tool.name as string,
+		description: (tool.description as string) || '',
+		parameters: getToolParameters(tool),
+	}));
 	return { functions, tools };
 }
 
-export async function executeGigaTool(tool: any, functionCall: FunctionCall): Promise<string> {
-	// Parse function arguments
-	let functionArgs;
+export async function executeGigaTool(tool: any, functionCall: FunctionCall): Promise<unknown> {
+	let functionArgs: unknown;
 	try {
 		functionArgs =
 			typeof functionCall.arguments === 'string'
 				? JSON.parse(functionCall.arguments)
-				: functionCall.arguments || {};
-	} catch (e) {
-		functionArgs = {};
+				: functionCall.arguments === undefined
+					? {}
+					: functionCall.arguments;
+	} catch (error) {
+		throw new Error(`Invalid JSON arguments for tool "${tool.name}"`);
 	}
 
-	// Try to execute the tool - n8n tools might have different execution methods
-	let toolResult;
-
-	// For n8n DynamicTool (Vector Store), extract the string input
-	let toolInput = functionArgs;
-	// Structured tools must receive the parsed arguments OBJECT; coercing it to a
-	// string makes their zod validation fail ("Expected object, received string").
-	const isStructuredTool =
-		tool.constructor?.name === 'DynamicStructuredTool' ||
-		typeof (tool.schema && tool.schema.safeParse) === 'function';
-	if (
-		!isStructuredTool &&
-		(tool.constructor?.name === 'DynamicTool' || (tool.call && !tool.execute))
-	) {
-		// DynamicTool expects a string input
-		if (typeof functionArgs === 'object') {
-			// Try to extract the first string value from the arguments
-			const firstKey = Object.keys(functionArgs)[0];
-			if (firstKey && typeof functionArgs[firstKey] === 'string') {
-				toolInput = functionArgs[firstKey];
-			} else {
-				toolInput = JSON.stringify(functionArgs);
-			}
+	const schema = getToolSchema(tool);
+	let toolInput: unknown = functionArgs;
+	if (schema?.type === 'string' || (schema === undefined && isLegacyStringTool(tool))) {
+		// Unwrap only the advertised input field, never an arbitrary first property.
+		toolInput = isObject(functionArgs) ? functionArgs.input : functionArgs;
+		if (typeof toolInput !== 'string') {
+			throw new Error(`Tool "${tool.name}" expects a string in "input"`);
 		}
+	} else if (!isObject(functionArgs)) {
+		throw new Error(`Tool "${tool.name}" expects an object of arguments`);
 	}
 
-	if (typeof tool.execute === 'function') {
-		toolResult = await tool.execute(toolInput);
-	} else if (typeof tool.call === 'function') {
-		toolResult = await tool.call(toolInput);
-	} else if (typeof tool.func === 'function') {
-		toolResult = await tool.func(toolInput);
-	} else {
-		toolResult = { error: 'Tool execution method not found' };
-	}
-
-	return toolResult;
+	if (typeof tool.execute === 'function') return await tool.execute(toolInput);
+	if (typeof tool.invoke === 'function') return await tool.invoke(toolInput);
+	if (typeof tool.call === 'function') return await tool.call(toolInput);
+	if (typeof tool.func === 'function') return await tool.func(toolInput);
+	throw new Error(`Tool "${tool.name}" has no supported execution method`);
 }
 
 export function formatGigaToolResult(toolResult: any, toolInput: any): string {

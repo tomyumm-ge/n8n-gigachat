@@ -53,7 +53,6 @@
 		]
 	},
 	"devDependencies": {
-		"@langchain/core": "^1.2.5",
 		"@n8n/node-cli": "^0.42.2",
 		"@types/node": "^26.1.2",
 		"eslint": "^10.8.0",
@@ -69,6 +68,7 @@
 		"langsmith": ">=0.5.19"
 	},
 	"dependencies": {
+		"@langchain/core": "^1.2.5",
 		"axios": "^1.13.5",
 		"gigachat": "^0.0.20",
 		"langchain-gigachat": "^0.0.18",
