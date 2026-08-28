@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-gigachat",
-	"version": "1.8.5",
+	"version": "1.9.0",
 	"description": "A user-friendly GigaChat AI (Sber) nodes for n8n",
 	"keywords": [
 		"gigachat",
